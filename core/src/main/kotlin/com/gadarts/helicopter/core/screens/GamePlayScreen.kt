@@ -31,6 +31,7 @@ class GamePlayScreen(
         engine.addSystem(RenderSystem(data))
         engine.addSystem(InputSystem(data))
         engine.addSystem(CharacterSystem(data, soundPlayer))
+        engine.addSystem(ProfilingSystem())
         addPlayer()
     }
 
@@ -72,6 +73,7 @@ class GamePlayScreen(
     }
 
     override fun dispose() {
+        engine.systems.forEach { (it as GameEntitySystem).dispose() }
     }
 
     companion object {

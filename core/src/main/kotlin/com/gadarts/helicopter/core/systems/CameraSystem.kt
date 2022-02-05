@@ -4,10 +4,13 @@ import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.EntitySystem
 import com.badlogic.gdx.math.Vector3
 
-class CameraSystem(private val data: SystemsData) : EntitySystem() {
+class CameraSystem(private val data: SystemsData) : GameEntitySystem() {
     override fun update(deltaTime: Float) {
         super.update(deltaTime)
         data.camera.update()
+    }
+
+    override fun dispose() {
     }
 
     override fun addedToEngine(engine: Engine?) {

@@ -5,8 +5,11 @@ import com.badlogic.ashley.core.EntitySystem
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 
-class InputSystem(private val data: SystemsData) : EntitySystem() {
+class InputSystem(private val data: SystemsData) : GameEntitySystem() {
     private lateinit var debugInput: CameraInputController
+    override fun dispose() {
+
+    }
 
     override fun addedToEngine(engine: Engine?) {
         super.addedToEngine(engine)

@@ -7,7 +7,11 @@ import com.badlogic.ashley.core.EntitySystem
 import com.gadarts.helicopter.core.SoundPlayer
 import com.gadarts.helicopter.core.components.ComponentsMapper
 
-class CharacterSystem(data: SystemsData, private val soundPlayer: SoundPlayer) : EntitySystem() {
+class CharacterSystem(data: SystemsData, private val soundPlayer: SoundPlayer) :
+    GameEntitySystem() {
+    override fun dispose() {
+
+    }
 
     override fun addedToEngine(engine: Engine?) {
         super.addedToEngine(engine)

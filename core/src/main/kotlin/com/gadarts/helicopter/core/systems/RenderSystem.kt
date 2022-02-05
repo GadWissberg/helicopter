@@ -2,7 +2,6 @@ package com.gadarts.helicopter.core.systems
 
 import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
-import com.badlogic.ashley.core.EntitySystem
 import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.utils.ImmutableArray
 import com.badlogic.gdx.Gdx
@@ -12,17 +11,19 @@ import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.math.Vector3
+import com.badlogic.gdx.math.collision.BoundingBox
+import com.badlogic.gdx.utils.Disposable
 import com.gadarts.helicopter.core.components.ComponentsMapper
 import com.gadarts.helicopter.core.components.ModelInstanceComponent
 import com.gadarts.helicopter.core.components.child.ChildModel
 import com.gadarts.helicopter.core.systems.render.AxisModelHandler
+import kotlin.math.max
 
-class RenderSystem(private val data: SystemsData) : EntitySystem() {
+class RenderSystem(private val data: SystemsData) : GameEntitySystem(), Disposable {
 
     private lateinit var modelBatch: ModelBatch
     private lateinit var modelInstanceEntities: ImmutableArray<Entity>
     private var axisModelHandler = AxisModelHandler()
-
     override fun addedToEngine(engine: Engine?) {
         super.addedToEngine(engine)
         val family = Family.all(ModelInstanceComponent::class.java).get()
@@ -43,11 +44,26 @@ class RenderSystem(private val data: SystemsData) : EntitySystem() {
         renderModels(deltaTime)
     }
 
+    private fun isVisible(entity: Entity): Boolean {
+        val modelInsComp = ComponentsMapper.modelInstance[entity]
+        val position: Vector3 = modelInsComp.modelInstance.transform.getTranslation(auxVector_1)
+        val center: Vector3 =
+            position.add(modelInsComp.getBoundingBox(auxBox).getCenter(auxVector_2))
+        val dims: Vector3 = auxBox.getDimensions(auxVector_2)
+        val max = max(auxVector_2.x, max(auxVector_2.y, auxVector_2.z))
+        auxVector_2.x = max
+        auxVector_2.y = max
+        auxVector_2.y = max
+        return data.camera.frustum.boundsInFrustum(center, dims)
+    }
+
     private fun renderModels(deltaTime: Float) {
         modelBatch.begin(data.camera)
         axisModelHandler.render(modelBatch)
         for (entity in modelInstanceEntities) {
-            renderModel(entity, deltaTime)
+            if (isVisible(entity)) {
+                renderModel(entity, deltaTime)
+            }
         }
         modelBatch.end()
     }
@@ -79,7 +95,7 @@ class RenderSystem(private val data: SystemsData) : EntitySystem() {
     ) {
         child.modelInstance.transform.setTranslation(
             modelInstance.transform.getTranslation(
-                auxVector
+                auxVector_1
             )
         )
         val node = child.modelInstance.nodes[0]
@@ -89,8 +105,14 @@ class RenderSystem(private val data: SystemsData) : EntitySystem() {
         modelBatch.render(child.modelInstance)
     }
 
+    override fun dispose() {
+        modelBatch.dispose()
+    }
+
     companion object {
-        val auxVector = Vector3()
+        val auxVector_1 = Vector3()
+        val auxVector_2 = Vector3()
+        val auxBox = BoundingBox()
         const val ROTATION_STEP = 896F
     }
 }

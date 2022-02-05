@@ -6,6 +6,11 @@ package com.gadarts.helicopter.core
 object DefaultGameSettings {
 
     /**
+     * Whether to show GL statistics.
+     */
+    const val SHOW_GL_PROFILING = true
+
+    /**
      * Whether to play sounds.
      */
     const val SFX = false
