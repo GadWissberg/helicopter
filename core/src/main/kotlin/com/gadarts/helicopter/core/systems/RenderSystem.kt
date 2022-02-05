@@ -9,15 +9,14 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Gdx.graphics
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
-import com.badlogic.gdx.graphics.VertexAttributes
-import com.badlogic.gdx.graphics.g3d.Material
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import com.badlogic.gdx.graphics.g3d.ModelInstance
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
-import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
+import com.badlogic.gdx.math.Vector
 import com.badlogic.gdx.math.Vector3
+import com.badlogic.gdx.math.Vector3.Z
 import com.gadarts.helicopter.core.components.ComponentsMapper
 import com.gadarts.helicopter.core.components.ModelInstanceComponent
+import com.gadarts.helicopter.core.components.child.ChildModel
 import com.gadarts.helicopter.core.systems.render.AxisModelHandler
 
 class RenderSystem(private val data: SystemsData) : EntitySystem() {
@@ -30,7 +29,6 @@ class RenderSystem(private val data: SystemsData) : EntitySystem() {
         super.addedToEngine(engine)
         val family = Family.all(ModelInstanceComponent::class.java).get()
         modelInstanceEntities = getEngine().getEntitiesFor(family)
-        val mb = ModelBuilder()
         modelBatch = ModelBatch()
     }
 
@@ -44,28 +42,57 @@ class RenderSystem(private val data: SystemsData) : EntitySystem() {
     override fun update(deltaTime: Float) {
         super.update(deltaTime)
         resetDisplay(Color.BLACK)
+        renderModels(deltaTime)
+    }
+
+    private fun renderModels(deltaTime: Float) {
         modelBatch.begin(data.camera)
         axisModelHandler.render(modelBatch)
         for (entity in modelInstanceEntities) {
-            modelBatch.render(ComponentsMapper.modelInstance.get(entity).modelInstance)
+            renderModel(entity, deltaTime)
         }
         modelBatch.end()
     }
 
-    private fun createArrowEntity(
-        modelBuilder: ModelBuilder,
-        color: Color,
-        direction: Vector3
-    ): Entity? {
-        val material = Material(ColorAttribute.createDiffuse(color))
-        val attributes = VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal
-        val model = modelBuilder.createArrow(Vector3.Zero, direction, material, attributes.toLong())
-        val modelInstanceComponent = engine.createComponent(ModelInstanceComponent::class.java)
-        modelInstanceComponent.init(ModelInstance(model))
-        return engine.createEntity().add(modelInstanceComponent)
+    private fun renderModel(entity: Entity?, deltaTime: Float) {
+        val modelInstance = ComponentsMapper.modelInstance.get(entity).modelInstance
+        modelBatch.render(modelInstance)
+        renderChildren(entity, modelInstance, deltaTime)
+    }
+
+    private fun renderChildren(
+        entity: Entity?,
+        modelInstance: ModelInstance,
+        deltaTime: Float
+    ) {
+        if (ComponentsMapper.childModelInstance.has(entity)) {
+            val childComponent = ComponentsMapper.childModelInstance.get(entity)
+            val children = childComponent.modelInstances
+            for (child in children) {
+                renderChild(child, deltaTime, modelInstance)
+            }
+        }
+    }
+
+    private fun renderChild(
+        child: ChildModel,
+        deltaTime: Float,
+        modelInstance: ModelInstance
+    ) {
+        child.modelInstance.transform.setTranslation(
+            modelInstance.transform.getTranslation(
+                auxVector
+            )
+        )
+        val node = child.modelInstance.nodes[0]
+        node.isAnimated = true
+        node.localTransform.rotate(child.rotationAxis, ROTATION_STEP * deltaTime)
+        child.modelInstance.calculateTransforms()
+        modelBatch.render(child.modelInstance)
     }
 
     companion object {
-        val auxVector3_1 = Vector3()
+        val auxVector = Vector3()
+        const val ROTATION_STEP = 768F
     }
 }

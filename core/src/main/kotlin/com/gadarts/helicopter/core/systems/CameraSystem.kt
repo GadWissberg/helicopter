@@ -26,8 +26,8 @@ class CameraSystem(private val data: SystemsData) : EntitySystem() {
     companion object {
         const val NEAR = 0.1F
         const val FAR = 300F
-        const val INITIAL_Y = 10F
-        const val INITIAL_Z = 10F
+        const val INITIAL_Y = 5F
+        const val INITIAL_Z = 5F
     }
 
 }

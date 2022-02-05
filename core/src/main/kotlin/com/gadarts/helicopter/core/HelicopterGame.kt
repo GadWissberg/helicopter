@@ -15,7 +15,7 @@ class HelicopterGame(private val androidInterface: AndroidInterface) :
     override fun create() {
         loadAssets()
         Gdx.input.inputProcessor = InputMultiplexer()
-        setScreen(GamePlayScreen())
+        setScreen(GamePlayScreen(assetsManager))
     }
 
     private fun loadAssets() {
