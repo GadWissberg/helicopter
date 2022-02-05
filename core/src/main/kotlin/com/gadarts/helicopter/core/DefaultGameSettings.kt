@@ -6,13 +6,8 @@ package com.gadarts.helicopter.core
 object DefaultGameSettings {
 
     /**
-     * Whether to display the UI components borders.
+     * Whether to play sounds.
      */
-    const val SHOW_UI_BORDERS = false
-
-    /**
-     * Whether to skip straight into a fake game.
-     */
-    const val SKIP_MENU = false
+    const val SFX = false
 }
 

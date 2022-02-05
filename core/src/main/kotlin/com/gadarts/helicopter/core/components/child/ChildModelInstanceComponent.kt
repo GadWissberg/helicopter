@@ -1,9 +1,8 @@
-package com.gadarts.helicopter.core.components
+package com.gadarts.helicopter.core.components.child
 
-import com.badlogic.ashley.core.Component
-import com.gadarts.helicopter.core.components.child.ChildModel
+import com.gadarts.helicopter.core.components.GameComponent
 
-class ChildModelInstanceComponent : Component {
+class ChildModelInstanceComponent : GameComponent() {
     var animateRotation: Boolean = false
     var modelInstances = ArrayList<ChildModel>()
 
@@ -11,6 +10,9 @@ class ChildModelInstanceComponent : Component {
         modelInstances.clear()
         modelInstances.addAll(models)
         this.animateRotation = animateRotation
+    }
+
+    override fun reset() {
     }
 
 }

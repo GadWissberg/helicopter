@@ -5,30 +5,33 @@ import com.badlogic.gdx.Screen
 import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.math.Vector3
 import com.gadarts.helicopter.core.EntityBuilder
+import com.gadarts.helicopter.core.SoundPlayer
 import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.assets.ModelsDefinitions.*
+import com.gadarts.helicopter.core.assets.SfxDefinitions
 import com.gadarts.helicopter.core.components.child.ChildModel
-import com.gadarts.helicopter.core.systems.CameraSystem
-import com.gadarts.helicopter.core.systems.InputSystem
-import com.gadarts.helicopter.core.systems.RenderSystem
-import com.gadarts.helicopter.core.systems.SystemsData
+import com.gadarts.helicopter.core.systems.*
 
 
 /**
  * The screen of the game itself.
  */
-class GamePlayScreen(private val assetsManager: GameAssetManager) : Screen {
+class GamePlayScreen(
+    private val assetsManager: GameAssetManager,
+    private val soundPlayer: SoundPlayer
+) : Screen {
 
 
     private lateinit var engine: PooledEngine
 
     override fun show() {
         this.engine = PooledEngine()
-        addPlayer()
         val data = SystemsData()
         engine.addSystem(CameraSystem(data))
         engine.addSystem(RenderSystem(data))
         engine.addSystem(InputSystem(data))
+        engine.addSystem(CharacterSystem(data, soundPlayer))
+        addPlayer()
     }
 
     private fun addPlayer() {
@@ -46,7 +49,9 @@ class GamePlayScreen(private val assetsManager: GameAssetManager) : Screen {
                     ),
                 ),
                 true
-            )
+            ).addAmbSoundComponent(assetsManager.getSound(SfxDefinitions.PROPELLER))
+            .addCharacterComponent(PLAYER_INITIAL_HP)
+            .addPlayerComponent()
             .finishAndAddToEngine()
     }
 
@@ -71,6 +76,7 @@ class GamePlayScreen(private val assetsManager: GameAssetManager) : Screen {
 
     companion object {
         private val auxVector = Vector3()
-
+        private const val PLAYER_INITIAL_HP = 100
+        private const val PLAYER_INITIAL_FUEL = 100
     }
 }

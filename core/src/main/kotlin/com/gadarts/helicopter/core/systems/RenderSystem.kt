@@ -11,9 +11,7 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import com.badlogic.gdx.graphics.g3d.ModelInstance
-import com.badlogic.gdx.math.Vector
 import com.badlogic.gdx.math.Vector3
-import com.badlogic.gdx.math.Vector3.Z
 import com.gadarts.helicopter.core.components.ComponentsMapper
 import com.gadarts.helicopter.core.components.ModelInstanceComponent
 import com.gadarts.helicopter.core.components.child.ChildModel
@@ -93,6 +91,6 @@ class RenderSystem(private val data: SystemsData) : EntitySystem() {
 
     companion object {
         val auxVector = Vector3()
-        const val ROTATION_STEP = 768F
+        const val ROTATION_STEP = 896F
     }
 }

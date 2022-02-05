@@ -2,12 +2,13 @@ package com.gadarts.helicopter.core.assets
 
 enum class AssetsTypes(
     val assets: Array<out AssetDefinition<*>>,
-    private val loadedUsingLoader: Boolean
+    private val loadedUsingLoader: Boolean = true
 ) {
-    TEXTURES(TexturesDefinitions.values(), true),
-    SHADERS(ShaderDefinitions.values(), false),
-    FONTS(FontsDefinitions.values(), true),
-    MODELS(ModelsDefinitions.values(), true);
+    TEXTURES(TexturesDefinitions.values()),
+    SHADERS(ShaderDefinitions.values(), loadedUsingLoader = false),
+    FONTS(FontsDefinitions.values()),
+    MODELS(ModelsDefinitions.values()),
+    SFX(SfxDefinitions.values());
 
     fun isLoadedUsingLoader(): Boolean {
         return loadedUsingLoader
