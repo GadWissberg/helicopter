@@ -6,18 +6,16 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.profiling.GLProfiler
-import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.gadarts.helicopter.core.DefaultGameSettings
 
-class ProfilingSystem : GameEntitySystem() {
+class ProfilingSystem(private val data: SystemsData) : GameEntitySystem() {
 
     private val stringBuilder: StringBuilder = StringBuilder()
-    private var stage = Stage()
     private lateinit var glProfiler: GLProfiler
     private lateinit var label: Label
     override fun dispose() {
-        stage.dispose()
+        data.stage.dispose()
     }
 
     override fun addedToEngine(engine: Engine?) {
@@ -33,7 +31,7 @@ class ProfilingSystem : GameEntitySystem() {
         val style = Label.LabelStyle(font, Color.WHITE)
         label = Label(stringBuilder, style)
         label.setPosition(0f, (Gdx.graphics.height - 175).toFloat())
-        stage.addActor(label)
+        data.stage.addActor(label)
         label.zIndex = 0
     }
 
@@ -50,13 +48,11 @@ class ProfilingSystem : GameEntitySystem() {
             displayGlProfiling()
             displayBatchCalls()
             label.setText(stringBuilder)
-            stage.act(delta)
-            stage.draw()
         }
     }
 
     private fun displayBatchCalls() {
-        displayLine(LABEL_UI_BATCH_RENDER_CALLS, (stage.batch as SpriteBatch).renderCalls)
+        displayLine(LABEL_UI_BATCH_RENDER_CALLS, (data.stage.batch as SpriteBatch).renderCalls)
     }
 
     private fun displayGlProfiling() {

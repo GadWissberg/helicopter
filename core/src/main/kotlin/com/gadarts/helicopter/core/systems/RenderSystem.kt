@@ -46,14 +46,12 @@ class RenderSystem(private val data: SystemsData) : GameEntitySystem(), Disposab
 
     private fun isVisible(entity: Entity): Boolean {
         val modelInsComp = ComponentsMapper.modelInstance[entity]
-        val position: Vector3 = modelInsComp.modelInstance.transform.getTranslation(auxVector_1)
-        val center: Vector3 =
-            position.add(modelInsComp.getBoundingBox(auxBox).getCenter(auxVector_2))
+        val pos: Vector3 = modelInsComp.modelInstance.transform.getTranslation(auxVector_1)
+        val center: Vector3 = pos.add(modelInsComp.getBoundingBox(auxBox).getCenter(auxVector_2))
         val dims: Vector3 = auxBox.getDimensions(auxVector_2)
-        val max = max(auxVector_2.x, max(auxVector_2.y, auxVector_2.z))
-        auxVector_2.x = max
-        auxVector_2.y = max
-        auxVector_2.y = max
+        dims.x = max(dims.x, max(dims.y, dims.z))
+        dims.y = max(dims.x, max(dims.y, dims.z))
+        dims.z = max(dims.x, max(dims.y, dims.z))
         return data.camera.frustum.boundsInFrustum(center, dims)
     }
 

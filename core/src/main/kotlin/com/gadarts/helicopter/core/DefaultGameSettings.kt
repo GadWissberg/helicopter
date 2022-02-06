@@ -11,6 +11,16 @@ object DefaultGameSettings {
     const val SHOW_GL_PROFILING = true
 
     /**
+     * Whether to enable the debug input to look around.
+     */
+    const val DEBUG_INPUT = false
+
+    /**
+     * Whether to show borders of widgets.
+     */
+    const val UI_DEBUG = false
+
+    /**
      * Whether to play sounds.
      */
     const val SFX = false

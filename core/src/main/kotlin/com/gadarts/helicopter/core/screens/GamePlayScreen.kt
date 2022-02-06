@@ -27,12 +27,18 @@ class GamePlayScreen(
     override fun show() {
         this.engine = PooledEngine()
         val data = SystemsData()
+        addSystems(data)
+        engine.getSystem(InputSystem::class.java).initialize()
+        addPlayer()
+    }
+
+    private fun addSystems(data: SystemsData) {
         engine.addSystem(CameraSystem(data))
         engine.addSystem(RenderSystem(data))
-        engine.addSystem(InputSystem(data))
+        engine.addSystem(InputSystem(data, assetsManager))
         engine.addSystem(CharacterSystem(data, soundPlayer))
-        engine.addSystem(ProfilingSystem())
-        addPlayer()
+        engine.addSystem(ProfilingSystem(data))
+        engine.addSystem(HudSystem(data))
     }
 
     private fun addPlayer() {
