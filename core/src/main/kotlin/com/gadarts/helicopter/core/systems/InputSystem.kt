@@ -4,10 +4,8 @@ import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton
-import com.badlogic.gdx.scenes.scene2d.ui.ImageButton.*
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle
 import com.badlogic.gdx.scenes.scene2d.ui.Table
-import com.badlogic.gdx.scenes.scene2d.ui.Touchpad
-import com.badlogic.gdx.scenes.scene2d.ui.Touchpad.*
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.gadarts.helicopter.core.DefaultGameSettings
 import com.gadarts.helicopter.core.assets.GameAssetManager
@@ -55,9 +53,7 @@ class InputSystem(private val data: SystemsData, private val assetsManager: Game
 
     private fun addJoystick(ui: Table) {
         val joystickTexture = assetsManager.getTexture(JOYSTICK)
-        val joystickDrawableTex = TextureRegionDrawable(joystickTexture)
-        val joystickCenterTex = TextureRegionDrawable(assetsManager.getTexture(JOYSTICK_CENTER))
-        ui.add(Touchpad(DEAD_ZONE, TouchpadStyle(joystickDrawableTex, joystickCenterTex)))
+        ui.add(data.touchpad)
             .size(joystickTexture.width.toFloat(), joystickTexture.height.toFloat())
             .pad(0F, JOYSTICK_PADDING_LEFT, JOYSTICK_PADDING_BOTTOM, 0F)
             .growX()
@@ -73,7 +69,6 @@ class InputSystem(private val data: SystemsData, private val assetsManager: Game
     }
 
     companion object {
-        const val DEAD_ZONE = 15F
         const val JOYSTICK_PADDING_LEFT = 64F
         const val JOYSTICK_PADDING_BOTTOM = 64F
     }

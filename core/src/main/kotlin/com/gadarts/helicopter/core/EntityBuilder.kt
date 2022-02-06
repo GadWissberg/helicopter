@@ -20,9 +20,11 @@ class EntityBuilder private constructor() {
         return instance
     }
 
-    fun finishAndAddToEngine() {
+    fun finishAndAddToEngine(): Entity {
         engine.addEntity(entity)
+        val result = entity
         entity = null
+        return result!!
     }
 
     fun addChildModelInstanceComponent(
