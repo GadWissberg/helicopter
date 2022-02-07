@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import com.badlogic.gdx.graphics.g3d.ModelInstance
+import com.badlogic.gdx.math.Quaternion
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
 import com.badlogic.gdx.utils.Disposable
@@ -91,16 +92,23 @@ class RenderSystem(private val data: SystemsData) : GameEntitySystem(), Disposab
         deltaTime: Float,
         modelInstance: ModelInstance
     ) {
-        child.modelInstance.transform.setTranslation(
-            modelInstance.transform.getTranslation(
-                auxVector_1
-            )
-        )
+        updateChildTransformation(modelInstance, child, deltaTime)
+        modelBatch.render(child.modelInstance)
+    }
+
+    private fun updateChildTransformation(
+        modelInstance: ModelInstance,
+        child: ChildModel,
+        deltaTime: Float
+    ) {
+        val parentRot = modelInstance.transform.getRotation(auxQuat)
+        val transform = child.modelInstance.transform
+        transform.setFromEulerAnglesRad(parentRot.yawRad, parentRot.pitchRad, parentRot.rollRad)
+        transform.setTranslation(modelInstance.transform.getTranslation(auxVector_1))
         val node = child.modelInstance.nodes[0]
         node.isAnimated = true
-        node.localTransform.rotate(child.rotationAxis, ROTATION_STEP * deltaTime)
+        node.localTransform.rotate(child.rotationAxis, ROT_STEP * deltaTime)
         child.modelInstance.calculateTransforms()
-        modelBatch.render(child.modelInstance)
     }
 
     override fun dispose() {
@@ -110,7 +118,8 @@ class RenderSystem(private val data: SystemsData) : GameEntitySystem(), Disposab
     companion object {
         val auxVector_1 = Vector3()
         val auxVector_2 = Vector3()
+        val auxQuat = Quaternion()
         val auxBox = BoundingBox()
-        const val ROTATION_STEP = 896F
+        const val ROT_STEP = 896F
     }
 }

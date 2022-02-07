@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.PooledEngine
 import com.badlogic.gdx.graphics.g3d.ModelInstance
+import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.scenes.scene2d.Actor
@@ -24,11 +25,13 @@ import kotlin.math.min
 
 class PlayerSystem(private val data: SystemsData, private val assetsManager: GameAssetManager) :
     GameEntitySystem() {
+    private var accelerationTiltDegrees: Float = 0.0f
+    private var rotTiltDegrees: Float = 0.0f
     private var rotation = 0F
-    private val currentDirection = Vector2(1F, 0F)
+    private val currentVelocity = Vector2(1F, 0F)
     private var desiredDirectionChanged: Boolean = false
     private lateinit var player: Entity
-    private val desiredDirection = Vector2()
+    private val desiredVelocity = Vector2()
 
     override fun dispose() {
     }
@@ -42,54 +45,110 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
                 val deltaY = actor.knobPercentY
                 if (deltaX != 0F || deltaY != 0F) {
                     updateDesiredDirection(deltaX, deltaY)
+                } else {
+                    desiredVelocity.setZero()
                 }
             }
         })
     }
 
     private fun updateDesiredDirection(deltaX: Float, deltaY: Float) {
-        desiredDirection.set(deltaX, deltaY)
+        desiredVelocity.set(deltaX, deltaY)
         desiredDirectionChanged = true
         updateRotationStep()
     }
 
     private fun updateRotationStep() {
-        val diff = desiredDirection.angle() - currentDirection.angle()
+        val diff = desiredVelocity.angle() - currentVelocity.angle()
         val negativeRotation = auxVector2.set(1F, 0F).setAngle(diff).angle() > 180
-        if (negativeRotation && rotation < 0) {
-            rotation = max(rotation - ROTATION_INCREASE, -MAX_ROTATION_STEP)
+        rotation = if (negativeRotation && rotation < 0) {
+            max(rotation - ROTATION_INCREASE, -MAX_ROTATION_STEP)
         } else if (!negativeRotation && rotation > 0) {
-            rotation = min(rotation + ROTATION_INCREASE, MAX_ROTATION_STEP)
+            min(rotation + ROTATION_INCREASE, MAX_ROTATION_STEP)
         } else {
-            rotation = INITIAL_ROTATION_STEP * (if (negativeRotation) -1F else 1F)
+            INITIAL_ROTATION_STEP * (if (negativeRotation) -1F else 1F)
         }
     }
 
     override fun update(deltaTime: Float) {
         super.update(deltaTime)
         handleRotation(deltaTime)
+        handleAcceleration()
+        takeStep(deltaTime)
+        handleMovementTilt()
     }
 
     private fun handleRotation(deltaTime: Float) {
         if (desiredDirectionChanged) {
-            val rotBefore = rotation
-            updateRotationStep()
-            val didNotReachYet = (rotBefore < 0 && rotation < 0) || (rotBefore > 0 && rotation > 0)
-            val diff = abs(currentDirection.angle() - desiredDirection.angle())
-            if (didNotReachYet && diff > ROTATION_EPSILON
-            ) {
-                rotate(deltaTime)
-            } else {
-                desiredDirectionChanged = false
-            }
+            calculateRotation(deltaTime)
+        } else {
+            lowerRotationTilt()
+        }
+        applyRotation()
+    }
+
+    private fun lowerRotationTilt() {
+        if (rotTiltDegrees > 0) {
+            rotTiltDegrees = max(rotTiltDegrees - ROT_TILT_DEC_STEP_SIZE, 0F)
+        } else if (rotTiltDegrees < 0) {
+            rotTiltDegrees = min(rotTiltDegrees + ROT_TILT_DEC_STEP_SIZE, 0F)
         }
     }
 
-    private fun rotate(deltaTime: Float) {
+    private fun handleMovementTilt() {
         val transform = ComponentsMapper.modelInstance.get(player).modelInstance.transform
-        val position = transform.getTranslation(auxVector3)
-        currentDirection.rotate(rotation * deltaTime)
-        transform.setToRotation(Vector3.Y, currentDirection.angle())
+        if (accelerationTiltDegrees > 0) {
+            transform.rotate(
+                Vector3.Z,
+                -accelerationTiltDegrees
+            )
+        }
+        transform.rotate(
+            Vector3.X,
+            rotTiltDegrees
+        )
+    }
+
+    private fun takeStep(deltaTime: Float) {
+        if (currentVelocity.len2() > 1F) {
+            val step = auxVector3_1.set(currentVelocity.x, 0F, -currentVelocity.y)
+            step.setLength2(step.len2() - 1F).scl(deltaTime)
+            ComponentsMapper.modelInstance.get(player).modelInstance.transform.trn(step)
+        }
+    }
+
+    private fun handleAcceleration() {
+        accelerationTiltDegrees = if (desiredVelocity.len2() > 0.5F) {
+            currentVelocity.setLength2(min(currentVelocity.len2() + (ACCELERATION), MAX_SPEED))
+            min(accelerationTiltDegrees + ACC_TILT_STEP_SIZE, ACC_TILT_RELATIVE_MAX_DEGREES)
+        } else {
+            currentVelocity.setLength2(max(currentVelocity.len2() - (DECELERATION), 1F))
+            max(accelerationTiltDegrees - ACC_TILT_STEP_SIZE, 0F)
+        }
+    }
+
+    private fun calculateRotation(deltaTime: Float) {
+        val rotBefore = rotation
+        updateRotationStep()
+        val diff = abs(currentVelocity.angle() - desiredVelocity.angle())
+        if ((rotBefore < 0 && rotation < 0) || (rotBefore > 0 && rotation > 0) && diff > ROT_EPSILON) {
+            currentVelocity.rotate(rotation * deltaTime)
+            increaseRotationTilt()
+        } else {
+            desiredDirectionChanged = false
+        }
+    }
+
+    private fun increaseRotationTilt() {
+        rotTiltDegrees += if (rotation > 0) -ROT_TILT_STEP_SIZE else ROT_TILT_STEP_SIZE
+        rotTiltDegrees = MathUtils.clamp(rotTiltDegrees, -ROT_TILT_MAX_DEG, ROT_TILT_MAX_DEG)
+    }
+
+    private fun applyRotation() {
+        val transform = ComponentsMapper.modelInstance.get(player).modelInstance.transform
+        val position = transform.getTranslation(auxVector3_1)
+        transform.setToRotation(Vector3.Y, currentVelocity.angle())
+        transform.rotate(Vector3.Z, -IDLE_Z_TILT_DEGREES)
         transform.setTranslation(position)
     }
 
@@ -98,7 +157,7 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
         return EntityBuilder.begin()
             .addModelInstanceComponent(
                 assetsManager.getModel(ModelsDefinitions.APACHE),
-                auxVector3.set(0F, 2F, 2F)
+                auxVector3_1.set(0F, 2F, 2F)
             ).addChildModelInstanceComponent(
                 listOf(
                     ChildModel(
@@ -116,12 +175,20 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
 
     companion object {
         private const val INITIAL_HP = 100
-        private const val INITIAL_FUEL = 100
         private const val MAX_ROTATION_STEP = 200F
         private const val ROTATION_INCREASE = 2F
         private const val INITIAL_ROTATION_STEP = 6F
-        val auxVector3 = Vector3()
+        val auxVector3_1 = Vector3()
         val auxVector2 = Vector2()
-        private const val ROTATION_EPSILON = 0.5F
+        private const val ROT_EPSILON = 0.5F
+        private const val MAX_SPEED = 2F
+        private const val ACCELERATION = 0.02F
+        private const val DECELERATION = 0.01F
+        private const val ACC_TILT_RELATIVE_MAX_DEGREES = 6F
+        private const val ACC_TILT_STEP_SIZE = 0.5F
+        private const val ROT_TILT_MAX_DEG = 20F
+        private const val ROT_TILT_STEP_SIZE = 1F
+        private const val ROT_TILT_DEC_STEP_SIZE = 0.5F
+        private const val IDLE_Z_TILT_DEGREES = 10F
     }
 }
