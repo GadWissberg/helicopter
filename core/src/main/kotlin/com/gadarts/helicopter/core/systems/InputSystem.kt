@@ -41,7 +41,7 @@ class InputSystem(private val data: SystemsData, private val assetsManager: Game
         }
     }
 
-    fun initialize() {
+    override fun initialize() {
         val ui = (data.stage.actors.first {
             val name = it.name
             name != null && name.equals(SystemsData.UI_TABLE_NAME)

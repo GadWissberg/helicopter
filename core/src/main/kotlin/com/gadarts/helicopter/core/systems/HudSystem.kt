@@ -7,6 +7,10 @@ import com.badlogic.gdx.utils.Align
 import com.gadarts.helicopter.core.DefaultGameSettings
 
 class HudSystem(private val data: SystemsData) : GameEntitySystem() {
+    override fun initialize() {
+
+    }
+
     override fun dispose() {
 
     }

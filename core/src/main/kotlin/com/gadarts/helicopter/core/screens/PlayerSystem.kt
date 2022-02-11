@@ -28,15 +28,16 @@ import kotlin.math.min
 
 class PlayerSystem(private val data: SystemsData, private val assetsManager: GameAssetManager) :
     GameEntitySystem() {
-    private var strafing: Float? = null
     private var lastTouchDown: Long = 0
     private var accelerationTiltDegrees: Float = 0.0f
     private var rotTiltDegrees: Float = 0.0f
     private var rotToAdd = 0F
-    private val currentVelocity = Vector2(1F, 0F)
     private var desiredDirectionChanged: Boolean = false
     private lateinit var player: Entity
     private val desiredVelocity = Vector2()
+    override fun initialize() {
+
+    }
 
     override fun dispose() {
     }
@@ -81,14 +82,18 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
     }
 
     private fun deactivateStrafing() {
-        if (strafing != null) {
-            currentVelocity.setAngle(strafing!!)
+        val playerComponent = ComponentsMapper.player.get(player)
+        if (playerComponent.strafing != null) {
+            val currentVelocity = playerComponent.getCurrentVelocity(auxVector2)
+            val newVelocity = currentVelocity.setAngle(playerComponent.strafing!!)
+            playerComponent.setCurrentVelocity(newVelocity)
         }
-        strafing = null
+        playerComponent.strafing = null
     }
 
     private fun activateStrafing() {
-        strafing =
+        val playerComponent = ComponentsMapper.player.get(player)
+        playerComponent.strafing =
             ComponentsMapper.modelInstance.get(player).modelInstance.transform.getRotation(
                 auxQuat
             ).getAngleAround(
@@ -115,7 +120,8 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
 
     private fun updateRotationStep() {
         if (desiredVelocity.isZero) return
-        val diff = desiredVelocity.angle() - currentVelocity.angle()
+        val playerComponent = ComponentsMapper.player.get(player)
+        val diff = desiredVelocity.angle() - playerComponent.getCurrentVelocity(auxVector2).angle()
         val negativeRotation = auxVector2.set(1F, 0F).setAngle(diff).angle() > 180
         rotToAdd = if (negativeRotation && rotToAdd < 0) {
             max(rotToAdd - ROTATION_INCREASE, -MAX_ROTATION_STEP)
@@ -136,7 +142,7 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
 
     private fun handleRotation(deltaTime: Float) {
         if (desiredDirectionChanged) {
-            if (desiredVelocity.isZero) {
+            if (!desiredVelocity.isZero) {
                 calculateRotation(deltaTime)
             }
         } else {
@@ -158,13 +164,17 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
         if (accelerationTiltDegrees > 0) {
             transform.rotate(Vector3.Z, -accelerationTiltDegrees)
         }
-        if (strafing == null) {
-            transform.rotate(Vector3.X, if (strafing == null) rotTiltDegrees else -rotTiltDegrees)
+        val playerComponent = ComponentsMapper.player.get(player)
+        if (playerComponent.strafing == null) {
+            val degrees = if (playerComponent.strafing == null) rotTiltDegrees else -rotTiltDegrees
+            transform.rotate(Vector3.X, degrees)
         }
     }
 
     private fun takeStep(deltaTime: Float) {
-        if (currentVelocity.len2() > 1F) {
+        val playerComponent = ComponentsMapper.player.get(player)
+        if (playerComponent.getCurrentVelocity(auxVector2).len2() > 1F) {
+            val currentVelocity = playerComponent.getCurrentVelocity(auxVector2)
             val step = auxVector3_1.set(currentVelocity.x, 0F, -currentVelocity.y)
             step.setLength2(step.len2() - 1F).scl(deltaTime)
             ComponentsMapper.modelInstance.get(player).modelInstance.transform.trn(step)
@@ -172,6 +182,7 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
     }
 
     private fun handleAcceleration() {
+        val currentVelocity = ComponentsMapper.player.get(player).getCurrentVelocity(auxVector2)
         accelerationTiltDegrees = if (desiredVelocity.len2() > 0.5F) {
             currentVelocity.setLength2(min(currentVelocity.len2() + (ACCELERATION), MAX_SPEED))
             min(accelerationTiltDegrees + ACC_TILT_STEP_SIZE, ACC_TILT_RELATIVE_MAX_DEGREES)
@@ -179,14 +190,18 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
             currentVelocity.setLength2(max(currentVelocity.len2() - (DECELERATION), 1F))
             max(accelerationTiltDegrees - ACC_TILT_STEP_SIZE, 0F)
         }
+        ComponentsMapper.player.get(player).setCurrentVelocity(currentVelocity)
     }
 
     private fun calculateRotation(deltaTime: Float) {
         val rotBefore = rotToAdd
         updateRotationStep()
+        val playerComponent = ComponentsMapper.player.get(player)
+        val currentVelocity = playerComponent.getCurrentVelocity(auxVector2)
         val diff = abs(currentVelocity.angle() - desiredVelocity.angle())
         if ((rotBefore < 0 && rotToAdd < 0) || (rotBefore > 0 && rotToAdd > 0) && diff > ROT_EPSILON) {
             currentVelocity.rotate(rotToAdd * deltaTime)
+            playerComponent.setCurrentVelocity(currentVelocity)
             increaseRotationTilt()
         } else {
             desiredDirectionChanged = false
@@ -201,9 +216,11 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
     private fun applyRotation() {
         val transform = ComponentsMapper.modelInstance.get(player).modelInstance.transform
         val position = transform.getTranslation(auxVector3_1)
+        val playerComponent = ComponentsMapper.player.get(player)
+        val currentVelocity = playerComponent.getCurrentVelocity(auxVector2)
         transform.setToRotation(
             Vector3.Y,
-            (if (strafing != null) strafing else currentVelocity.angle())!!
+            (if (playerComponent.strafing != null) playerComponent.strafing else currentVelocity.angle())!!
         )
         transform.rotate(Vector3.Z, -IDLE_Z_TILT_DEGREES)
         transform.setTranslation(position)

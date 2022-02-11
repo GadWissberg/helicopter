@@ -111,6 +111,10 @@ class RenderSystem(private val data: SystemsData) : GameEntitySystem(), Disposab
         child.modelInstance.calculateTransforms()
     }
 
+    override fun initialize() {
+
+    }
+
     override fun dispose() {
         modelBatch.dispose()
     }

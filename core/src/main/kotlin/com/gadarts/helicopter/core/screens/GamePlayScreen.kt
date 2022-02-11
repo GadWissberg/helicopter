@@ -22,7 +22,7 @@ class GamePlayScreen(
         this.engine = PooledEngine()
         val data = SystemsData(assetsManager)
         addSystems(data)
-        engine.getSystem(InputSystem::class.java).initialize()
+        engine.systems.forEach { (it as GameEntitySystem).initialize() }
     }
 
     private fun addSystems(data: SystemsData) {

@@ -14,6 +14,10 @@ class ProfilingSystem(private val data: SystemsData) : GameEntitySystem() {
     private val stringBuilder: StringBuilder = StringBuilder()
     private lateinit var glProfiler: GLProfiler
     private lateinit var label: Label
+    override fun initialize() {
+
+    }
+
     override fun dispose() {
         data.stage.dispose()
     }

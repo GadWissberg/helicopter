@@ -10,5 +10,7 @@ object ComponentsMapper {
         ComponentMapper.getFor(ChildModelInstanceComponent::class.java)
     val ambSound: ComponentMapper<AmbSoundComponent> =
         ComponentMapper.getFor(AmbSoundComponent::class.java)
+    val player: ComponentMapper<PlayerComponent> =
+        ComponentMapper.getFor(PlayerComponent::class.java)
 
 }
