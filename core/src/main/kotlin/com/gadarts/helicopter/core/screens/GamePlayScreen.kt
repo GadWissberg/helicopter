@@ -22,13 +22,13 @@ class GamePlayScreen(
         this.engine = PooledEngine()
         val data = SystemsData(assetsManager)
         addSystems(data)
-        engine.systems.forEach { (it as GameEntitySystem).initialize() }
+        engine.systems.forEach { (it as GameEntitySystem).initialize(assetsManager) }
     }
 
     private fun addSystems(data: SystemsData) {
         engine.addSystem(CameraSystem(data))
         engine.addSystem(RenderSystem(data))
-        engine.addSystem(InputSystem(data, assetsManager))
+        engine.addSystem(InputSystem(data))
         engine.addSystem(CharacterSystem(data, soundPlayer))
         engine.addSystem(ProfilingSystem(data))
         engine.addSystem(HudSystem(data))

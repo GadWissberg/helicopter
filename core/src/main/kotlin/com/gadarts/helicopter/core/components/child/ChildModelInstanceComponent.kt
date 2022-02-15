@@ -3,7 +3,7 @@ package com.gadarts.helicopter.core.components.child
 import com.gadarts.helicopter.core.components.GameComponent
 
 class ChildModelInstanceComponent : GameComponent() {
-    var animateRotation: Boolean = false
+    private var animateRotation: Boolean = false
     var modelInstances = ArrayList<ChildModel>()
 
     fun init(models: List<ChildModel>, animateRotation: Boolean) {

@@ -23,6 +23,6 @@ object DefaultGameSettings {
     /**
      * Whether to play sounds.
      */
-    const val SFX = false
+    const val SFX = true
 }
 

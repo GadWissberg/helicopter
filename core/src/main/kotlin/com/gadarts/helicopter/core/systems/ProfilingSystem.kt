@@ -8,13 +8,14 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.profiling.GLProfiler
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.gadarts.helicopter.core.DefaultGameSettings
+import com.gadarts.helicopter.core.assets.GameAssetManager
 
 class ProfilingSystem(private val data: SystemsData) : GameEntitySystem() {
 
     private val stringBuilder: StringBuilder = StringBuilder()
     private lateinit var glProfiler: GLProfiler
     private lateinit var label: Label
-    override fun initialize() {
+    override fun initialize(assetsManager: GameAssetManager) {
 
     }
 

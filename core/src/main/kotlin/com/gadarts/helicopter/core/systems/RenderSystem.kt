@@ -14,6 +14,7 @@ import com.badlogic.gdx.math.Quaternion
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
 import com.badlogic.gdx.utils.Disposable
+import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.components.ComponentsMapper
 import com.gadarts.helicopter.core.components.ModelInstanceComponent
 import com.gadarts.helicopter.core.components.child.ChildModel
@@ -111,7 +112,7 @@ class RenderSystem(private val data: SystemsData) : GameEntitySystem(), Disposab
         child.modelInstance.calculateTransforms()
     }
 
-    override fun initialize() {
+    override fun initialize(assetsManager: GameAssetManager) {
 
     }
 

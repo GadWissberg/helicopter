@@ -6,6 +6,7 @@ import com.badlogic.ashley.core.Family
 import com.badlogic.gdx.math.Interpolation
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
+import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.components.ComponentsMapper
 import com.gadarts.helicopter.core.components.PlayerComponent
 
@@ -59,7 +60,7 @@ class CameraSystem(private val data: SystemsData) : GameEntitySystem() {
         }
     }
 
-    override fun initialize() {
+    override fun initialize(assetsManager: GameAssetManager) {
         player = engine.getEntitiesFor(Family.all(PlayerComponent::class.java).get()).first()
     }
 

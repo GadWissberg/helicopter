@@ -4,7 +4,6 @@ import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.PooledEngine
 import com.badlogic.gdx.graphics.g3d.ModelInstance
-import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Quaternion
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
@@ -21,21 +20,25 @@ import com.gadarts.helicopter.core.components.ComponentsMapper
 import com.gadarts.helicopter.core.components.child.ChildModel
 import com.gadarts.helicopter.core.systems.GameEntitySystem
 import com.gadarts.helicopter.core.systems.SystemsData
+import com.gadarts.helicopter.core.systems.player.TiltAnimationHandler
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
 
+/**
+ * Responsible for player logic, including reacting to input.
+ */
 class PlayerSystem(private val data: SystemsData, private val assetsManager: GameAssetManager) :
     GameEntitySystem() {
     private var lastTouchDown: Long = 0
-    private var accelerationTiltDegrees: Float = 0.0f
-    private var rotTiltDegrees: Float = 0.0f
+    private var tiltAnimationHandler = TiltAnimationHandler()
     private var rotToAdd = 0F
     private var desiredDirectionChanged: Boolean = false
     private lateinit var player: Entity
     private val desiredVelocity = Vector2()
-    override fun initialize() {
+
+    override fun initialize(assetsManager: GameAssetManager) {
 
     }
 
@@ -99,7 +102,7 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
             ).getAngleAround(
                 Vector3.Y
             )
-        rotTiltDegrees = 0F
+        tiltAnimationHandler.onStrafeActivated()
     }
 
     private fun touchPadTouched(actor: Actor) {
@@ -137,7 +140,7 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
         handleRotation(deltaTime)
         handleAcceleration()
         takeStep(deltaTime)
-        handleMovementTilt()
+        tiltAnimationHandler.update(player)
     }
 
     private fun handleRotation(deltaTime: Float) {
@@ -146,30 +149,11 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
                 calculateRotation(deltaTime)
             }
         } else {
-            lowerRotationTilt()
+            tiltAnimationHandler.lowerRotationTilt()
         }
         applyRotation()
     }
 
-    private fun lowerRotationTilt() {
-        if (rotTiltDegrees > 0) {
-            rotTiltDegrees = max(rotTiltDegrees - ROT_TILT_DEC_STEP_SIZE, 0F)
-        } else if (rotTiltDegrees < 0) {
-            rotTiltDegrees = min(rotTiltDegrees + ROT_TILT_DEC_STEP_SIZE, 0F)
-        }
-    }
-
-    private fun handleMovementTilt() {
-        val transform = ComponentsMapper.modelInstance.get(player).modelInstance.transform
-        if (accelerationTiltDegrees > 0) {
-            transform.rotate(Vector3.Z, -accelerationTiltDegrees)
-        }
-        val playerComponent = ComponentsMapper.player.get(player)
-        if (playerComponent.strafing == null) {
-            val degrees = if (playerComponent.strafing == null) rotTiltDegrees else -rotTiltDegrees
-            transform.rotate(Vector3.X, degrees)
-        }
-    }
 
     private fun takeStep(deltaTime: Float) {
         val playerComponent = ComponentsMapper.player.get(player)
@@ -183,12 +167,12 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
 
     private fun handleAcceleration() {
         val currentVelocity = ComponentsMapper.player.get(player).getCurrentVelocity(auxVector2)
-        accelerationTiltDegrees = if (desiredVelocity.len2() > 0.5F) {
+        if (desiredVelocity.len2() > 0.5F) {
             currentVelocity.setLength2(min(currentVelocity.len2() + (ACCELERATION), MAX_SPEED))
-            min(accelerationTiltDegrees + ACC_TILT_STEP_SIZE, ACC_TILT_RELATIVE_MAX_DEGREES)
+            tiltAnimationHandler.onAcceleration()
         } else {
             currentVelocity.setLength2(max(currentVelocity.len2() - (DECELERATION), 1F))
-            max(accelerationTiltDegrees - ACC_TILT_STEP_SIZE, 0F)
+            tiltAnimationHandler.onDeceleration()
         }
         ComponentsMapper.player.get(player).setCurrentVelocity(currentVelocity)
     }
@@ -196,22 +180,21 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
     private fun calculateRotation(deltaTime: Float) {
         val rotBefore = rotToAdd
         updateRotationStep()
-        val playerComponent = ComponentsMapper.player.get(player)
-        val currentVelocity = playerComponent.getCurrentVelocity(auxVector2)
+        val currentVelocity = ComponentsMapper.player.get(player).getCurrentVelocity(auxVector2)
         val diff = abs(currentVelocity.angle() - desiredVelocity.angle())
         if ((rotBefore < 0 && rotToAdd < 0) || (rotBefore > 0 && rotToAdd > 0) && diff > ROT_EPSILON) {
-            currentVelocity.rotate(rotToAdd * deltaTime)
-            playerComponent.setCurrentVelocity(currentVelocity)
-            increaseRotationTilt()
+            rotate(currentVelocity, deltaTime)
         } else {
             desiredDirectionChanged = false
         }
     }
 
-    private fun increaseRotationTilt() {
-        rotTiltDegrees += if (rotToAdd > 0) -ROT_TILT_STEP_SIZE else ROT_TILT_STEP_SIZE
-        rotTiltDegrees = MathUtils.clamp(rotTiltDegrees, -ROT_TILT_MAX_DEG, ROT_TILT_MAX_DEG)
+    private fun rotate(currentVelocity: Vector2, deltaTime: Float) {
+        currentVelocity.rotate(rotToAdd * deltaTime)
+        ComponentsMapper.player.get(player).setCurrentVelocity(currentVelocity)
+        tiltAnimationHandler.onRotation(rotToAdd)
     }
+
 
     private fun applyRotation() {
         val transform = ComponentsMapper.modelInstance.get(player).modelInstance.transform
@@ -252,20 +235,14 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
         private const val MAX_ROTATION_STEP = 200F
         private const val ROTATION_INCREASE = 2F
         private const val INITIAL_ROTATION_STEP = 6F
-        val auxVector3_1 = Vector3()
-        val auxVector2 = Vector2()
-        val auxQuat = Quaternion()
+        private val auxVector3_1 = Vector3()
+        private val auxVector2 = Vector2()
+        private val auxQuat = Quaternion()
         private const val ROT_EPSILON = 0.5F
         private const val MAX_SPEED = 2F
         private const val ACCELERATION = 0.02F
         private const val DECELERATION = 0.01F
-        private const val ACC_TILT_RELATIVE_MAX_DEGREES = 6F
-        private const val ACC_TILT_STEP_SIZE = 0.5F
-        private const val ROT_TILT_MAX_DEG = 20F
-        private const val ROT_TILT_STEP_SIZE = 1F
-        private const val ROT_TILT_DEC_STEP_SIZE = 0.5F
         private const val IDLE_Z_TILT_DEGREES = 12F
         private const val STRAFE_PRESS_INTERVAL = 500
-
     }
 }

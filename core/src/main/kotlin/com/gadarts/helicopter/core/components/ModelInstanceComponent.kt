@@ -7,7 +7,7 @@ import com.badlogic.gdx.math.collision.BoundingBox
 
 class ModelInstanceComponent : GameComponent() {
     lateinit var modelInstance: ModelInstance
-    val boundingBox = BoundingBox()
+    private val boundingBox = BoundingBox()
 
     fun init(model: Model, position: Vector3) {
         this.modelInstance = ModelInstance(model)

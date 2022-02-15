@@ -4,13 +4,14 @@ import com.badlogic.gdx.audio.Sound
 
 class SoundPlayer {
 
-    fun play(sound: Sound, loop: Boolean = false) {
-        if (!DefaultGameSettings.SFX) return
-        if (!loop) {
+    fun play(sound: Sound, loop: Boolean = false): Long {
+        if (!DefaultGameSettings.SFX) return -1
+        val id: Long = if (!loop) {
             sound.play()
         } else {
             sound.loop()
         }
+        return id
     }
 
 }
