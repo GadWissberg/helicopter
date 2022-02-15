@@ -125,6 +125,6 @@ class RenderSystem(private val data: SystemsData) : GameEntitySystem(), Disposab
         val auxVector_2 = Vector3()
         val auxQuat = Quaternion()
         val auxBox = BoundingBox()
-        const val ROT_STEP = 896F
+        const val ROT_STEP = 1600F
     }
 }

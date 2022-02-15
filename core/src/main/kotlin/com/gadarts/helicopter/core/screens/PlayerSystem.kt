@@ -3,7 +3,14 @@ package com.gadarts.helicopter.core.screens
 import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.PooledEngine
+import com.badlogic.gdx.graphics.GL20
+import com.badlogic.gdx.graphics.VertexAttributes.Usage.*
+import com.badlogic.gdx.graphics.g3d.Material
+import com.badlogic.gdx.graphics.g3d.Model
 import com.badlogic.gdx.graphics.g3d.ModelInstance
+import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.createDiffuse
+import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.Quaternion
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
@@ -16,6 +23,7 @@ import com.gadarts.helicopter.core.EntityBuilder
 import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.assets.ModelsDefinitions
 import com.gadarts.helicopter.core.assets.SfxDefinitions
+import com.gadarts.helicopter.core.assets.TexturesDefinitions.PROPELLER_BLURRED
 import com.gadarts.helicopter.core.components.ComponentsMapper
 import com.gadarts.helicopter.core.components.child.ChildModel
 import com.gadarts.helicopter.core.systems.GameEntitySystem
@@ -31,6 +39,7 @@ import kotlin.math.min
  */
 class PlayerSystem(private val data: SystemsData, private val assetsManager: GameAssetManager) :
     GameEntitySystem() {
+    private lateinit var propellerBlurredModel: Model
     private var lastTouchDown: Long = 0
     private var tiltAnimationHandler = TiltAnimationHandler()
     private var rotToAdd = 0F
@@ -39,14 +48,49 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
     private val desiredVelocity = Vector2()
 
     override fun initialize(assetsManager: GameAssetManager) {
+    }
 
+    private fun createPropellerBlurredModel(assetsManager: GameAssetManager) {
+        val builder = ModelBuilder()
+        builder.begin()
+        val material = createPropellerBlurredMaterial(assetsManager)
+        createPropellerBlurredMesh(builder, material)
+        propellerBlurredModel = builder.end()
+    }
+
+    private fun createPropellerBlurredMesh(
+        builder: ModelBuilder,
+        material: Material
+    ) {
+        val mbp = builder.part(
+            "propeller_blurred",
+            GL20.GL_TRIANGLES,
+            (Position or Normal or TextureCoordinates).toLong(),
+            material
+        )
+        mbp.setUVRange(0F, 0F, 1F, 1F)
+        mbp.rect(
+            -1F, 0F, -1F,
+            -1F, 0F, 1F,
+            1F, 0F, 1F,
+            1F, 0F, -1F,
+            0F, 1F, 0F,
+        )
+    }
+
+    private fun createPropellerBlurredMaterial(assetsManager: GameAssetManager): Material {
+        val material = Material(createDiffuse(assetsManager.getTexture(PROPELLER_BLURRED)))
+        material.set(BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA))
+        return material
     }
 
     override fun dispose() {
+        propellerBlurredModel.dispose()
     }
 
     override fun addedToEngine(engine: Engine?) {
         super.addedToEngine(engine)
+        createPropellerBlurredModel(assetsManager)
         player = addPlayer(engine as PooledEngine, assetsManager)
         data.touchpad.addListener(object : ClickListener() {
             override fun touchDown(
@@ -218,8 +262,8 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
             ).addChildModelInstanceComponent(
                 listOf(
                     ChildModel(
-                        ModelInstance(assetsManager.getModel(ModelsDefinitions.PROPELLER)),
-                        Vector3.Z,
+                        ModelInstance(propellerBlurredModel),
+                        Vector3.Y,
                         Vector3.Zero
                     ),
                 ),
