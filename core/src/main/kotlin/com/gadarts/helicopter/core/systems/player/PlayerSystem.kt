@@ -23,12 +23,14 @@ import com.gadarts.helicopter.core.EntityBuilder
 import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.assets.ModelsDefinitions
 import com.gadarts.helicopter.core.assets.SfxDefinitions
+import com.gadarts.helicopter.core.assets.TexturesDefinitions
+import com.gadarts.helicopter.core.assets.TexturesDefinitions.MUZZLE_0
 import com.gadarts.helicopter.core.assets.TexturesDefinitions.PROPELLER_BLURRED
 import com.gadarts.helicopter.core.components.ComponentsMapper
 import com.gadarts.helicopter.core.components.child.ChildModel
 import com.gadarts.helicopter.core.systems.GameEntitySystem
 import com.gadarts.helicopter.core.systems.HudSystemEventsSubscriber
-import com.gadarts.helicopter.core.systems.SystemsData
+import com.gadarts.helicopter.core.systems.Notifier
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -37,10 +39,11 @@ import kotlin.math.min
 /**
  * Responsible for player logic, including reacting to input.
  */
-class PlayerSystem(private val data: SystemsData, private val assetsManager: GameAssetManager) :
-    GameEntitySystem<PlayerSystemEventsSubscriber>(), HudSystemEventsSubscriber {
+class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
+    Notifier<PlayerSystemEventsSubscriber> {
 
 
+    private lateinit var muzzleModel: Model
     private lateinit var propellerBlurredModel: Model
     private var lastTouchDown: Long = 0
     private var tiltAnimationHandler = TiltAnimationHandler()
@@ -49,23 +52,24 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
     private lateinit var player: Entity
     private val desiredVelocity = Vector2()
     override val subscribers = HashSet<PlayerSystemEventsSubscriber>()
-    override fun initialize(assetsManager: GameAssetManager) {
+    override fun initialize(am: GameAssetManager) {
     }
 
     private fun createPropellerBlurredModel(assetsManager: GameAssetManager) {
         val builder = ModelBuilder()
         builder.begin()
-        val material = createPropellerBlurredMaterial(assetsManager)
-        createPropellerBlurredMesh(builder, material)
+        val material = createFlatMaterial(assetsManager, PROPELLER_BLURRED)
+        createFlatMesh(builder, material, "propeller_blurred")
         propellerBlurredModel = builder.end()
     }
 
-    private fun createPropellerBlurredMesh(
+    private fun createFlatMesh(
         builder: ModelBuilder,
-        material: Material
+        material: Material,
+        meshName: String
     ) {
         val mbp = builder.part(
-            "propeller_blurred",
+            meshName,
             GL20.GL_TRIANGLES,
             (Position or Normal or TextureCoordinates).toLong(),
             material
@@ -80,21 +84,26 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
         )
     }
 
-    private fun createPropellerBlurredMaterial(assetsManager: GameAssetManager): Material {
-        val material = Material(createDiffuse(assetsManager.getTexture(PROPELLER_BLURRED)))
+    private fun createFlatMaterial(
+        assetsManager: GameAssetManager,
+        textureDefinition: TexturesDefinitions
+    ): Material {
+        val material = Material(createDiffuse(assetsManager.getTexture(textureDefinition)))
         material.set(BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA))
         return material
     }
 
     override fun dispose() {
         propellerBlurredModel.dispose()
+        muzzleModel.dispose()
     }
 
     override fun addedToEngine(engine: Engine?) {
         super.addedToEngine(engine)
+        createMuzzleModel(assetsManager)
         createPropellerBlurredModel(assetsManager)
         player = addPlayer(engine as PooledEngine, assetsManager)
-        data.touchpad.addListener(object : ClickListener() {
+        commonData.touchpad.addListener(object : ClickListener() {
             override fun touchDown(
                 event: InputEvent?,
                 x: Float,
@@ -128,6 +137,14 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
                 super.touchUp(event, x, y, pointer, button)
             }
         })
+    }
+
+    private fun createMuzzleModel(assetsManager: GameAssetManager) {
+        val builder = ModelBuilder()
+        builder.begin()
+        val material = createFlatMaterial(assetsManager, MUZZLE_0)
+        createFlatMesh(builder, material, "muzzle")
+        muzzleModel = builder.end()
     }
 
     private fun deactivateStrafing() {
@@ -271,10 +288,16 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
             ).addAmbSoundComponent(assetsManager.getSound(SfxDefinitions.PROPELLER))
             .addCharacterComponent(INITIAL_HP)
             .addPlayerComponent()
+            .addArmComponent(muzzleModel)
             .finishAndAddToEngine()
     }
 
     override fun onPrimaryWeaponButtonPressed() {
+        val armComponent = ComponentsMapper.arm.get(player)
+        if (armComponent.loaded) {
+            armComponent.displayMuzzle = true
+            subscribers.forEach { it.onPlayerPrimaryWeaponShot() }
+        }
     }
 
     override fun onPrimaryWeaponButtonReleased() {

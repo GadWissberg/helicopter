@@ -5,11 +5,8 @@ import com.badlogic.ashley.core.PooledEngine
 import com.badlogic.gdx.audio.Sound
 import com.badlogic.gdx.graphics.g3d.Model
 import com.badlogic.gdx.math.Vector3
-import com.gadarts.helicopter.core.components.AmbSoundComponent
-import com.gadarts.helicopter.core.components.CharacterComponent
+import com.gadarts.helicopter.core.components.*
 import com.gadarts.helicopter.core.components.child.ChildModelInstanceComponent
-import com.gadarts.helicopter.core.components.ModelInstanceComponent
-import com.gadarts.helicopter.core.components.PlayerComponent
 import com.gadarts.helicopter.core.components.child.ChildModel
 
 class EntityBuilder private constructor() {
@@ -56,6 +53,13 @@ class EntityBuilder private constructor() {
         val characterComponent = engine.createComponent(PlayerComponent::class.java)
         characterComponent.init()
         entity!!.add(characterComponent)
+        return instance
+    }
+
+    fun addArmComponent(muzzleModel: Model): EntityBuilder {
+        val armComponent = engine.createComponent(ArmComponent::class.java)
+        armComponent.init(muzzleModel)
+        entity!!.add(armComponent)
         return instance
     }
 

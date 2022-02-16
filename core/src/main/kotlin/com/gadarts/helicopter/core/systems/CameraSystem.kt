@@ -10,16 +10,15 @@ import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.components.ComponentsMapper
 import com.gadarts.helicopter.core.components.PlayerComponent
 
-class CameraSystem(private val data: SystemsData) :
-    GameEntitySystem<CameraSystemEventsSubscriber>() {
+class CameraSystem : GameEntitySystem() {
 
     private var cameraStrafeMode = Vector3().setZero()
     private var cameraTarget = Vector3()
     private var player: Entity? = null
-    override val subscribers = HashSet<CameraSystemEventsSubscriber>()
+
     override fun update(deltaTime: Float) {
         super.update(deltaTime)
-        data.camera.update()
+        commonData.camera.update()
         followPlayer()
     }
 
@@ -38,11 +37,11 @@ class CameraSystem(private val data: SystemsData) :
 
     private fun followPlayerWhenStrafing(playerPosition: Vector3) {
         if (cameraStrafeMode.isZero) {
-            cameraStrafeMode.set(data.camera.position).sub(playerPosition)
+            cameraStrafeMode.set(commonData.camera.position).sub(playerPosition)
         } else {
-            data.camera.position.set(
+            commonData.camera.position.set(
                 playerPosition.x,
-                data.camera.position.y,
+                commonData.camera.position.y,
                 playerPosition.z
             ).add(cameraStrafeMode.x, 0F, cameraStrafeMode.z)
         }
@@ -55,14 +54,14 @@ class CameraSystem(private val data: SystemsData) :
         val velocityDir = playerComp.getCurrentVelocity(auxVector2).nor().setLength2(5F)
         cameraTarget =
             playerPosition.add(velocityDir.x, 0F, -velocityDir.y + 4F)
-        cameraTarget.y = data.camera.position.y
-        data.camera.position.interpolate(cameraTarget, 0.2F, Interpolation.exp5)
+        cameraTarget.y = commonData.camera.position.y
+        commonData.camera.position.interpolate(cameraTarget, 0.2F, Interpolation.exp5)
         if (!cameraStrafeMode.isZero) {
             cameraStrafeMode.setZero()
         }
     }
 
-    override fun initialize(assetsManager: GameAssetManager) {
+    override fun initialize(am: GameAssetManager) {
         player = engine.getEntitiesFor(Family.all(PlayerComponent::class.java).get()).first()
     }
 
@@ -75,11 +74,11 @@ class CameraSystem(private val data: SystemsData) :
     }
 
     private fun initializeCamera() {
-        data.camera.near = NEAR
-        data.camera.far = FAR
-        data.camera.update()
-        data.camera.position.set(0F, INITIAL_Y, INITIAL_Z)
-        data.camera.rotate(Vector3.X, -45F)
+        commonData.camera.near = NEAR
+        commonData.camera.far = FAR
+        commonData.camera.update()
+        commonData.camera.position.set(0F, INITIAL_Y, INITIAL_Z)
+        commonData.camera.rotate(Vector3.X, -45F)
     }
 
     companion object {

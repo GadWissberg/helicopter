@@ -1,4 +1,4 @@
-package com.gadarts.helicopter.core
+package com.gadarts.helicopter.core.systems
 
 interface Notifier<T> {
     val subscribers: HashSet<T>

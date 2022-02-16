@@ -13,7 +13,8 @@ import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.assets.TexturesDefinitions
 import com.gadarts.helicopter.core.assets.TexturesDefinitions.*
 
-class HudSystem(private val data: SystemsData) : GameEntitySystem<HudSystemEventsSubscriber>() {
+class HudSystem : GameEntitySystem(), Notifier<HudSystemEventsSubscriber> {
+
 
     private val priWeaponButtonClickListener = object : ClickListener() {
         override fun touchDown(
@@ -32,7 +33,6 @@ class HudSystem(private val data: SystemsData) : GameEntitySystem<HudSystemEvent
             super.touchUp(event, x, y, pointer, button)
         }
     }
-
     private val secWeaponButtonClickListener = object : ClickListener() {
         override fun touchDown(
             event: InputEvent,
@@ -50,11 +50,9 @@ class HudSystem(private val data: SystemsData) : GameEntitySystem<HudSystemEvent
             super.touchUp(event, x, y, pointer, button)
         }
     }
-
     override val subscribers = HashSet<HudSystemEventsSubscriber>()
-
     override fun initialize(am: GameAssetManager) {
-        val ui = (data.stage.actors.first {
+        val ui = (commonData.stage.actors.first {
             val name = it.name
             name != null && name.equals(SystemsData.UI_TABLE_NAME)
         }) as Table
@@ -65,7 +63,7 @@ class HudSystem(private val data: SystemsData) : GameEntitySystem<HudSystemEvent
 
     private fun addJoystick(ui: Table, assetsManager: GameAssetManager) {
         val joystickTexture = assetsManager.getTexture(JOYSTICK)
-        ui.add(data.touchpad)
+        ui.add(commonData.touchpad)
             .size(joystickTexture.width.toFloat(), joystickTexture.height.toFloat())
             .pad(0F, JOYSTICK_PADDING_LEFT, JOYSTICK_PADDING_BOTTOM, 0F)
             .growX()
@@ -102,13 +100,13 @@ class HudSystem(private val data: SystemsData) : GameEntitySystem<HudSystemEvent
         uiTable.setFillParent(true)
         uiTable.setSize(Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
         uiTable.align(Align.bottom)
-        data.stage.addActor(uiTable)
+        commonData.stage.addActor(uiTable)
     }
 
     override fun update(deltaTime: Float) {
         super.update(deltaTime)
-        data.stage.act(deltaTime)
-        data.stage.draw()
+        commonData.stage.act(deltaTime)
+        commonData.stage.draw()
     }
 
     companion object {

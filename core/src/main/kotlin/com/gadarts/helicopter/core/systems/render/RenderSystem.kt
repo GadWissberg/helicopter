@@ -15,26 +15,32 @@ import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
 import com.badlogic.gdx.utils.Disposable
 import com.gadarts.helicopter.core.assets.GameAssetManager
+import com.gadarts.helicopter.core.components.ArmComponent
 import com.gadarts.helicopter.core.components.ComponentsMapper
 import com.gadarts.helicopter.core.components.ModelInstanceComponent
 import com.gadarts.helicopter.core.components.child.ChildModel
 import com.gadarts.helicopter.core.systems.GameEntitySystem
-import com.gadarts.helicopter.core.systems.SystemsData
+import com.gadarts.helicopter.core.systems.player.PlayerSystemEventsSubscriber
 import kotlin.math.max
 
-class RenderSystem(private val data: SystemsData) : GameEntitySystem<Any?>(), Disposable {
+class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscriber {
 
+
+    private lateinit var armEntities: ImmutableArray<Entity>
     private lateinit var modelBatch: ModelBatch
     private lateinit var modelInstanceEntities: ImmutableArray<Entity>
     private var axisModelHandler = AxisModelHandler()
+
     override fun addedToEngine(engine: Engine?) {
         super.addedToEngine(engine)
-        val family = Family.all(ModelInstanceComponent::class.java).get()
-        modelInstanceEntities = getEngine().getEntitiesFor(family)
+        val modelInstanceFamily = Family.all(ModelInstanceComponent::class.java).get()
+        modelInstanceEntities = getEngine().getEntitiesFor(modelInstanceFamily)
+        val armFamily = Family.all(ArmComponent::class.java).get()
+        armEntities = getEngine().getEntitiesFor(armFamily)
         modelBatch = ModelBatch()
     }
 
-    private fun resetDisplay(color: Color) {
+    private fun resetDisplay(@Suppress("SameParameterValue") color: Color) {
         Gdx.gl.glViewport(0, 0, graphics.width, graphics.height)
         val s = if (graphics.bufferFormat.coverageSampling) GL20.GL_COVERAGE_BUFFER_BIT_NV else 0
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT or GL20.GL_DEPTH_BUFFER_BIT or s)
@@ -55,18 +61,31 @@ class RenderSystem(private val data: SystemsData) : GameEntitySystem<Any?>(), Di
         dims.x = max(dims.x, max(dims.y, dims.z))
         dims.y = max(dims.x, max(dims.y, dims.z))
         dims.z = max(dims.x, max(dims.y, dims.z))
-        return data.camera.frustum.boundsInFrustum(center, dims)
+        return commonData.camera.frustum.boundsInFrustum(center, dims)
     }
 
     private fun renderModels(deltaTime: Float) {
-        modelBatch.begin(data.camera)
+        modelBatch.begin(commonData.camera)
         axisModelHandler.render(modelBatch)
         for (entity in modelInstanceEntities) {
             if (isVisible(entity)) {
                 renderModel(entity, deltaTime)
+                renderMuzzle(entity)
             }
         }
         modelBatch.end()
+    }
+
+    private fun renderMuzzle(entity: Entity?) {
+        if (ComponentsMapper.arm.has(entity)) {
+            val armComponent = ComponentsMapper.arm.get(entity)
+            if (armComponent.displayMuzzle) {
+                val modelInstance = ComponentsMapper.modelInstance.get(entity).modelInstance
+                val translation = modelInstance.transform.getTranslation(auxVector_1)
+                armComponent.modelInstance.transform.setTranslation(translation.add(1F, 0F, 0F))
+                modelBatch.render(armComponent.modelInstance)
+            }
+        }
     }
 
     private fun renderModel(entity: Entity?, deltaTime: Float) {
@@ -113,12 +132,15 @@ class RenderSystem(private val data: SystemsData) : GameEntitySystem<Any?>(), Di
         child.modelInstance.calculateTransforms()
     }
 
-    override fun initialize(assetsManager: GameAssetManager) {
+    override fun initialize(am: GameAssetManager) {
 
     }
 
     override fun dispose() {
         modelBatch.dispose()
+    }
+
+    override fun onPlayerPrimaryWeaponShot() {
     }
 
     companion object {

@@ -10,17 +10,18 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.gadarts.helicopter.core.DefaultGameSettings
 import com.gadarts.helicopter.core.assets.GameAssetManager
 
-class ProfilingSystem(private val data: SystemsData) : GameEntitySystem<Any?>() {
+class ProfilingSystem : GameEntitySystem() {
 
     private val stringBuilder: StringBuilder = StringBuilder()
     private lateinit var glProfiler: GLProfiler
     private lateinit var label: Label
-    override fun initialize(assetsManager: GameAssetManager) {
+
+    override fun initialize(am: GameAssetManager) {
 
     }
 
     override fun dispose() {
-        data.stage.dispose()
+        commonData.stage.dispose()
     }
 
     override fun addedToEngine(engine: Engine?) {
@@ -36,7 +37,7 @@ class ProfilingSystem(private val data: SystemsData) : GameEntitySystem<Any?>() 
         val style = Label.LabelStyle(font, Color.WHITE)
         label = Label(stringBuilder, style)
         label.setPosition(0f, (Gdx.graphics.height - 175).toFloat())
-        data.stage.addActor(label)
+        commonData.stage.addActor(label)
         label.zIndex = 0
     }
 
@@ -57,7 +58,10 @@ class ProfilingSystem(private val data: SystemsData) : GameEntitySystem<Any?>() 
     }
 
     private fun displayBatchCalls() {
-        displayLine(LABEL_UI_BATCH_RENDER_CALLS, (data.stage.batch as SpriteBatch).renderCalls)
+        displayLine(
+            LABEL_UI_BATCH_RENDER_CALLS,
+            (commonData.stage.batch as SpriteBatch).renderCalls
+        )
     }
 
     private fun displayGlProfiling() {

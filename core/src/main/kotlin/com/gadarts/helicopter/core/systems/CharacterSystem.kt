@@ -7,16 +7,14 @@ import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.utils.ImmutableArray
 import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Vector3
-import com.gadarts.helicopter.core.SoundPlayer
 import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.components.AmbSoundComponent
 import com.gadarts.helicopter.core.components.ComponentsMapper
 
-class CharacterSystem(private val data: SystemsData, private val soundPlayer: SoundPlayer) :
-    GameEntitySystem<Any?>() {
-    private lateinit var ambSoundEntities: ImmutableArray<Entity>
+class CharacterSystem : GameEntitySystem() {
 
-    override fun initialize(assetsManager: GameAssetManager) {
+    private lateinit var ambSoundEntities: ImmutableArray<Entity>
+    override fun initialize(am: GameAssetManager) {
 
     }
 
@@ -34,7 +32,7 @@ class CharacterSystem(private val data: SystemsData, private val soundPlayer: So
     private fun updateEntity3dSound(entity: Entity?) {
         val transform = ComponentsMapper.modelInstance.get(entity).modelInstance.transform
         val position = transform.getTranslation(auxVector)
-        var distance = MathUtils.clamp(data.camera.position.dst2(position), 15F, 64F)
+        var distance = MathUtils.clamp(commonData.camera.position.dst2(position), 15F, 64F)
         distance = 1 - MathUtils.norm(15F, 64F, distance)
         val ambSoundComponent = ComponentsMapper.ambSound.get(entity)
         ambSoundComponent.sound.setVolume(ambSoundComponent.soundId, distance)

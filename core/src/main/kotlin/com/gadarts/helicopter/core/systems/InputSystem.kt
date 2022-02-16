@@ -6,9 +6,11 @@ import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 import com.gadarts.helicopter.core.DefaultGameSettings
 import com.gadarts.helicopter.core.assets.GameAssetManager
 
-class InputSystem(private val data: SystemsData) :
-    GameEntitySystem<Any?>() {
+class InputSystem : GameEntitySystem() {
+
+
     private lateinit var debugInput: CameraInputController
+
     override fun dispose() {
 
     }
@@ -20,11 +22,11 @@ class InputSystem(private val data: SystemsData) :
 
     private fun initializeInput() {
         if (DefaultGameSettings.DEBUG_INPUT) {
-            debugInput = CameraInputController(data.camera)
+            debugInput = CameraInputController(commonData.camera)
             debugInput.autoUpdate = true
             Gdx.input.inputProcessor = debugInput
         } else {
-            Gdx.input.inputProcessor = data.stage
+            Gdx.input.inputProcessor = commonData.stage
         }
     }
 
@@ -35,10 +37,10 @@ class InputSystem(private val data: SystemsData) :
         }
     }
 
-    override fun initialize(assetsManager: GameAssetManager) {
+    override fun initialize(am: GameAssetManager) {
 
     }
 
-
     companion object
+
 }

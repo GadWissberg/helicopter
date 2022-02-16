@@ -20,24 +20,42 @@ class GamePlayScreen(
 
     private lateinit var engine: PooledEngine
 
+    @Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES_WARNING")
     override fun show() {
         this.engine = PooledEngine()
         val data = SystemsData(assetsManager)
         addSystems(data)
-        engine.systems.forEach { (it as GameEntitySystem<*>).javaClass. }
-        engine.systems.forEach { (it as GameEntitySystem<*>).initialize(assetsManager) }
+        initializeSubscriptions()
+        engine.systems.forEach {
+            (it as GameEntitySystem).initialize(
+                assetsManager
+            )
+        }
+    }
+
+    private fun initializeSubscriptions() {
+        val hudSystem = engine.getSystem(HudSystem::class.java)
+        hudSystem.subscribeForEvents(engine.getSystem(PlayerSystem::class.java))
+        val playerSystem = engine.getSystem(PlayerSystem::class.java)
+        playerSystem.subscribeForEvents(engine.getSystem(RenderSystem::class.java))
     }
 
     private fun addSystems(data: SystemsData) {
-        engine.addSystem(CameraSystem(data))
-        engine.addSystem(RenderSystem(data))
-        engine.addSystem(InputSystem(data))
-        engine.addSystem(CharacterSystem(data, soundPlayer))
-        engine.addSystem(ProfilingSystem(data))
-        engine.addSystem(HudSystem(data))
-        engine.addSystem(PlayerSystem(data, assetsManager))
+        addSystem(PlayerSystem(), data)
+        addSystem(RenderSystem(), data)
+        addSystem(CameraSystem(), data)
+        addSystem(CharacterSystem(), data)
+        addSystem(HudSystem(), data)
+        addSystem(InputSystem(), data)
+        addSystem(ProfilingSystem(), data)
     }
 
+    private fun addSystem(system: GameEntitySystem, data: SystemsData) {
+        system.commonData = data
+        system.soundPlayer = soundPlayer
+        system.assetsManager = assetsManager
+        engine.addSystem(system)
+    }
 
     override fun render(delta: Float) {
         engine.update(delta)
@@ -56,7 +74,7 @@ class GamePlayScreen(
     }
 
     override fun dispose() {
-        engine.systems.forEach { (it as GameEntitySystem<*>).dispose() }
+        engine.systems.forEach { (it as GameEntitySystem).dispose() }
     }
 
 
