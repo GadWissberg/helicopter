@@ -13,7 +13,7 @@ import com.gadarts.helicopter.core.components.AmbSoundComponent
 import com.gadarts.helicopter.core.components.ComponentsMapper
 
 class CharacterSystem(private val data: SystemsData, private val soundPlayer: SoundPlayer) :
-    GameEntitySystem() {
+    GameEntitySystem<Any?>() {
     private lateinit var ambSoundEntities: ImmutableArray<Entity>
 
     override fun initialize(assetsManager: GameAssetManager) {

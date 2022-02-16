@@ -1,4 +1,4 @@
-package com.gadarts.helicopter.core.systems
+package com.gadarts.helicopter.core.systems.render
 
 import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
@@ -18,10 +18,11 @@ import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.components.ComponentsMapper
 import com.gadarts.helicopter.core.components.ModelInstanceComponent
 import com.gadarts.helicopter.core.components.child.ChildModel
-import com.gadarts.helicopter.core.systems.render.AxisModelHandler
+import com.gadarts.helicopter.core.systems.GameEntitySystem
+import com.gadarts.helicopter.core.systems.SystemsData
 import kotlin.math.max
 
-class RenderSystem(private val data: SystemsData) : GameEntitySystem(), Disposable {
+class RenderSystem(private val data: SystemsData) : GameEntitySystem<Any?>(), Disposable {
 
     private lateinit var modelBatch: ModelBatch
     private lateinit var modelInstanceEntities: ImmutableArray<Entity>

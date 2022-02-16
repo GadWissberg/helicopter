@@ -7,7 +7,7 @@ import com.gadarts.helicopter.core.DefaultGameSettings
 import com.gadarts.helicopter.core.assets.GameAssetManager
 
 class InputSystem(private val data: SystemsData) :
-    GameEntitySystem() {
+    GameEntitySystem<Any?>() {
     private lateinit var debugInput: CameraInputController
     override fun dispose() {
 

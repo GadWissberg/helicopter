@@ -10,11 +10,13 @@ import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.components.ComponentsMapper
 import com.gadarts.helicopter.core.components.PlayerComponent
 
-class CameraSystem(private val data: SystemsData) : GameEntitySystem() {
+class CameraSystem(private val data: SystemsData) :
+    GameEntitySystem<CameraSystemEventsSubscriber>() {
+
     private var cameraStrafeMode = Vector3().setZero()
     private var cameraTarget = Vector3()
     private var player: Entity? = null
-
+    override val subscribers = HashSet<CameraSystemEventsSubscriber>()
     override fun update(deltaTime: Float) {
         super.update(deltaTime)
         data.camera.update()

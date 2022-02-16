@@ -5,6 +5,8 @@ import com.badlogic.gdx.Screen
 import com.gadarts.helicopter.core.SoundPlayer
 import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.systems.*
+import com.gadarts.helicopter.core.systems.player.PlayerSystem
+import com.gadarts.helicopter.core.systems.render.RenderSystem
 
 
 /**
@@ -22,7 +24,8 @@ class GamePlayScreen(
         this.engine = PooledEngine()
         val data = SystemsData(assetsManager)
         addSystems(data)
-        engine.systems.forEach { (it as GameEntitySystem).initialize(assetsManager) }
+        engine.systems.forEach { (it as GameEntitySystem<*>).javaClass. }
+        engine.systems.forEach { (it as GameEntitySystem<*>).initialize(assetsManager) }
     }
 
     private fun addSystems(data: SystemsData) {
@@ -53,7 +56,7 @@ class GamePlayScreen(
     }
 
     override fun dispose() {
-        engine.systems.forEach { (it as GameEntitySystem).dispose() }
+        engine.systems.forEach { (it as GameEntitySystem<*>).dispose() }
     }
 
 

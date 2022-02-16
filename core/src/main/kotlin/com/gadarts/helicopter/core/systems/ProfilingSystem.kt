@@ -10,7 +10,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.gadarts.helicopter.core.DefaultGameSettings
 import com.gadarts.helicopter.core.assets.GameAssetManager
 
-class ProfilingSystem(private val data: SystemsData) : GameEntitySystem() {
+class ProfilingSystem(private val data: SystemsData) : GameEntitySystem<Any?>() {
 
     private val stringBuilder: StringBuilder = StringBuilder()
     private lateinit var glProfiler: GLProfiler

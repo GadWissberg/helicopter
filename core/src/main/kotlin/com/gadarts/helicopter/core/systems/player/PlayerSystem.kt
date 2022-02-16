@@ -1,4 +1,4 @@
-package com.gadarts.helicopter.core.screens
+package com.gadarts.helicopter.core.systems.player
 
 import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
@@ -27,8 +27,8 @@ import com.gadarts.helicopter.core.assets.TexturesDefinitions.PROPELLER_BLURRED
 import com.gadarts.helicopter.core.components.ComponentsMapper
 import com.gadarts.helicopter.core.components.child.ChildModel
 import com.gadarts.helicopter.core.systems.GameEntitySystem
+import com.gadarts.helicopter.core.systems.HudSystemEventsSubscriber
 import com.gadarts.helicopter.core.systems.SystemsData
-import com.gadarts.helicopter.core.systems.player.TiltAnimationHandler
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -38,7 +38,9 @@ import kotlin.math.min
  * Responsible for player logic, including reacting to input.
  */
 class PlayerSystem(private val data: SystemsData, private val assetsManager: GameAssetManager) :
-    GameEntitySystem() {
+    GameEntitySystem<PlayerSystemEventsSubscriber>(), HudSystemEventsSubscriber {
+
+
     private lateinit var propellerBlurredModel: Model
     private var lastTouchDown: Long = 0
     private var tiltAnimationHandler = TiltAnimationHandler()
@@ -46,7 +48,7 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
     private var desiredDirectionChanged: Boolean = false
     private lateinit var player: Entity
     private val desiredVelocity = Vector2()
-
+    override val subscribers = HashSet<PlayerSystemEventsSubscriber>()
     override fun initialize(assetsManager: GameAssetManager) {
     }
 
@@ -198,7 +200,6 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
         applyRotation()
     }
 
-
     private fun takeStep(deltaTime: Float) {
         val playerComponent = ComponentsMapper.player.get(player)
         if (playerComponent.getCurrentVelocity(auxVector2).len2() > 1F) {
@@ -239,7 +240,6 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
         tiltAnimationHandler.onRotation(rotToAdd)
     }
 
-
     private fun applyRotation() {
         val transform = ComponentsMapper.modelInstance.get(player).modelInstance.transform
         val position = transform.getTranslation(auxVector3_1)
@@ -272,6 +272,18 @@ class PlayerSystem(private val data: SystemsData, private val assetsManager: Gam
             .addCharacterComponent(INITIAL_HP)
             .addPlayerComponent()
             .finishAndAddToEngine()
+    }
+
+    override fun onPrimaryWeaponButtonPressed() {
+    }
+
+    override fun onPrimaryWeaponButtonReleased() {
+    }
+
+    override fun onSecondaryWeaponButtonPressed() {
+    }
+
+    override fun onSecondaryWeaponButtonReleased() {
     }
 
     companion object {
