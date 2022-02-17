@@ -11,9 +11,11 @@ import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.math.Quaternion
+import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
 import com.badlogic.gdx.utils.Disposable
+import com.badlogic.gdx.utils.TimeUtils
 import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.components.ArmComponent
 import com.gadarts.helicopter.core.components.ComponentsMapper
@@ -55,9 +57,9 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
 
     private fun isVisible(entity: Entity): Boolean {
         val modelInsComp = ComponentsMapper.modelInstance[entity]
-        val pos: Vector3 = modelInsComp.modelInstance.transform.getTranslation(auxVector_1)
-        val center: Vector3 = pos.add(modelInsComp.getBoundingBox(auxBox).getCenter(auxVector_2))
-        val dims: Vector3 = auxBox.getDimensions(auxVector_2)
+        val pos: Vector3 = modelInsComp.modelInstance.transform.getTranslation(auxVector3_1)
+        val center: Vector3 = pos.add(modelInsComp.getBoundingBox(auxBox).getCenter(auxVector3_2))
+        val dims: Vector3 = auxBox.getDimensions(auxVector3_2)
         dims.x = max(dims.x, max(dims.y, dims.z))
         dims.y = max(dims.x, max(dims.y, dims.z))
         dims.z = max(dims.x, max(dims.y, dims.z))
@@ -70,19 +72,24 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
         for (entity in modelInstanceEntities) {
             if (isVisible(entity)) {
                 renderModel(entity, deltaTime)
-                renderMuzzle(entity)
+                renderSpark(entity)
             }
         }
         modelBatch.end()
     }
 
-    private fun renderMuzzle(entity: Entity?) {
+    private fun renderSpark(entity: Entity) {
         if (ComponentsMapper.arm.has(entity)) {
             val armComponent = ComponentsMapper.arm.get(entity)
-            if (armComponent.displayMuzzle) {
+            if (TimeUtils.timeSinceMillis(armComponent.displaySpark) <= SPARK_DURATION) {
                 val modelInstance = ComponentsMapper.modelInstance.get(entity).modelInstance
-                val translation = modelInstance.transform.getTranslation(auxVector_1)
-                armComponent.modelInstance.transform.setTranslation(translation.add(1F, 0F, 0F))
+                modelInstance.transform.getRotation(auxQuat)
+                armComponent.modelInstance.transform.getScale(auxVector3_2)
+                armComponent.modelInstance.transform
+                    .setToTranslation(modelInstance.transform.getTranslation(auxVector3_1))
+                    .scale(auxVector3_2.x, auxVector3_2.y, auxVector3_2.z)
+                    .rotate(auxQuat)
+                    .translate(2F, 0F, 0F)
                 modelBatch.render(armComponent.modelInstance)
             }
         }
@@ -125,7 +132,7 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
         val parentRot = modelInstance.transform.getRotation(auxQuat)
         val transform = child.modelInstance.transform
         transform.setFromEulerAnglesRad(parentRot.yawRad, parentRot.pitchRad, parentRot.rollRad)
-        transform.setTranslation(modelInstance.transform.getTranslation(auxVector_1))
+        transform.setTranslation(modelInstance.transform.getTranslation(auxVector3_1))
         val node = child.modelInstance.nodes[0]
         node.isAnimated = true
         node.localTransform.rotate(child.rotationAxis, ROT_STEP * deltaTime)
@@ -144,10 +151,12 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
     }
 
     companion object {
-        val auxVector_1 = Vector3()
-        val auxVector_2 = Vector3()
+        val auxVector3_1 = Vector3()
+        val auxVector3_2 = Vector3()
+        val auxVector2_1 = Vector2()
         val auxQuat = Quaternion()
         val auxBox = BoundingBox()
         const val ROT_STEP = 1600F
+        const val SPARK_DURATION = 75L
     }
 }

@@ -19,12 +19,13 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.ui.Touchpad
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.utils.TimeUtils
+import com.gadarts.helicopter.core.DefaultGameSettings
 import com.gadarts.helicopter.core.EntityBuilder
 import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.assets.ModelsDefinitions
 import com.gadarts.helicopter.core.assets.SfxDefinitions
 import com.gadarts.helicopter.core.assets.TexturesDefinitions
-import com.gadarts.helicopter.core.assets.TexturesDefinitions.MUZZLE_0
+import com.gadarts.helicopter.core.assets.TexturesDefinitions.SPARK_0
 import com.gadarts.helicopter.core.assets.TexturesDefinitions.PROPELLER_BLURRED
 import com.gadarts.helicopter.core.components.ComponentsMapper
 import com.gadarts.helicopter.core.components.child.ChildModel
@@ -43,7 +44,8 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
     Notifier<PlayerSystemEventsSubscriber> {
 
 
-    private lateinit var muzzleModel: Model
+    private var primaryShooting: Boolean = false
+    private lateinit var sparkModel: Model
     private lateinit var propellerBlurredModel: Model
     private var lastTouchDown: Long = 0
     private var tiltAnimationHandler = TiltAnimationHandler()
@@ -76,10 +78,10 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
         )
         mbp.setUVRange(0F, 0F, 1F, 1F)
         mbp.rect(
-            -1F, 0F, -1F,
             -1F, 0F, 1F,
             1F, 0F, 1F,
             1F, 0F, -1F,
+            -1F, 0F, -1F,
             0F, 1F, 0F,
         )
     }
@@ -95,12 +97,12 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
 
     override fun dispose() {
         propellerBlurredModel.dispose()
-        muzzleModel.dispose()
+        sparkModel.dispose()
     }
 
     override fun addedToEngine(engine: Engine?) {
         super.addedToEngine(engine)
-        createMuzzleModel(assetsManager)
+        createSparkModel(assetsManager)
         createPropellerBlurredModel(assetsManager)
         player = addPlayer(engine as PooledEngine, assetsManager)
         commonData.touchpad.addListener(object : ClickListener() {
@@ -139,12 +141,12 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
         })
     }
 
-    private fun createMuzzleModel(assetsManager: GameAssetManager) {
+    private fun createSparkModel(assetsManager: GameAssetManager) {
         val builder = ModelBuilder()
         builder.begin()
-        val material = createFlatMaterial(assetsManager, MUZZLE_0)
-        createFlatMesh(builder, material, "muzzle")
-        muzzleModel = builder.end()
+        val material = createFlatMaterial(assetsManager, SPARK_0)
+        createFlatMesh(builder, material, "spark")
+        sparkModel = builder.end()
     }
 
     private fun deactivateStrafing() {
@@ -204,6 +206,18 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
         handleAcceleration()
         takeStep(deltaTime)
         tiltAnimationHandler.update(player)
+        handleShooting()
+    }
+
+    private fun handleShooting() {
+        if (!primaryShooting) return
+        val armComponent = ComponentsMapper.arm.get(player)
+        val now = TimeUtils.millis()
+        if (armComponent.loaded <= now) {
+            armComponent.displaySpark = now
+            armComponent.loaded = now + PRIMARY_RELOAD_DURATION
+            subscribers.forEach { it.onPlayerPrimaryWeaponShot() }
+        }
     }
 
     private fun handleRotation(deltaTime: Float) {
@@ -272,11 +286,13 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
 
     private fun addPlayer(engine: PooledEngine, assetsManager: GameAssetManager): Entity {
         EntityBuilder.initialize(engine)
-        return EntityBuilder.begin()
+        val entityBuilder = EntityBuilder.begin()
             .addModelInstanceComponent(
                 assetsManager.getModel(ModelsDefinitions.APACHE),
                 auxVector3_1.set(0F, 2F, 2F)
-            ).addChildModelInstanceComponent(
+            )
+        if (DefaultGameSettings.DISPLAY_PROPELLER) {
+            entityBuilder.addChildModelInstanceComponent(
                 listOf(
                     ChildModel(
                         ModelInstance(propellerBlurredModel),
@@ -285,22 +301,21 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
                     ),
                 ),
                 true
-            ).addAmbSoundComponent(assetsManager.getSound(SfxDefinitions.PROPELLER))
+            )
+        }
+        return entityBuilder.addAmbSoundComponent(assetsManager.getSound(SfxDefinitions.PROPELLER))
             .addCharacterComponent(INITIAL_HP)
             .addPlayerComponent()
-            .addArmComponent(muzzleModel)
+            .addArmComponent(sparkModel)
             .finishAndAddToEngine()
     }
 
     override fun onPrimaryWeaponButtonPressed() {
-        val armComponent = ComponentsMapper.arm.get(player)
-        if (armComponent.loaded) {
-            armComponent.displayMuzzle = true
-            subscribers.forEach { it.onPlayerPrimaryWeaponShot() }
-        }
+        primaryShooting = true
     }
 
     override fun onPrimaryWeaponButtonReleased() {
+        primaryShooting = false
     }
 
     override fun onSecondaryWeaponButtonPressed() {
@@ -323,5 +338,6 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
         private const val DECELERATION = 0.01F
         private const val IDLE_Z_TILT_DEGREES = 12F
         private const val STRAFE_PRESS_INTERVAL = 500
+        private const val PRIMARY_RELOAD_DURATION = 250L
     }
 }

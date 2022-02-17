@@ -24,5 +24,10 @@ object DefaultGameSettings {
      * Whether to play sounds.
      */
     const val SFX = false
+
+    /**
+     * Whether to show the Helicopter's propeller.
+     */
+    const val DISPLAY_PROPELLER = true
 }
 

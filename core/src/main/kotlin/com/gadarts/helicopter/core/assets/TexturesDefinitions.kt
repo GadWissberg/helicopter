@@ -12,8 +12,8 @@ enum class TexturesDefinitions(ninepatch: Boolean = false) : AssetDefinition<Tex
     ICON_BULLETS,
     ICON_MISSILES,
     PROPELLER_BLURRED,
-    MUZZLE_0,
-    MUZZLE_1;
+    SPARK_0,
+    SPARK_1;
 
     private var path: String =
         "textures/${(if (ninepatch) "$name.9" else name).toLowerCase(ROOT)}.png"
