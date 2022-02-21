@@ -2,13 +2,13 @@ package com.gadarts.helicopter.core.components.child
 
 import com.gadarts.helicopter.core.components.GameComponent
 
-class ChildModelInstanceComponent : GameComponent() {
+class ChildDecalComponent : GameComponent() {
     private var animateRotation: Boolean = false
-    var modelInstances = ArrayList<ChildModel>()
+    var decals = ArrayList<ChildDecal>()
 
-    fun init(models: List<ChildModel>, animateRotation: Boolean) {
-        modelInstances.clear()
-        modelInstances.addAll(models)
+    fun init(decals: List<ChildDecal>, animateRotation: Boolean) {
+        this.decals.clear()
+        this.decals.addAll(decals)
         this.animateRotation = animateRotation
     }
 

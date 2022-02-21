@@ -5,11 +5,12 @@ import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.PooledEngine
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.VertexAttributes.Usage.*
+import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.graphics.g3d.Material
 import com.badlogic.gdx.graphics.g3d.Model
-import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.createDiffuse
+import com.badlogic.gdx.graphics.g3d.decals.Decal.*
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.Quaternion
 import com.badlogic.gdx.math.Vector2
@@ -28,7 +29,7 @@ import com.gadarts.helicopter.core.assets.TexturesDefinitions
 import com.gadarts.helicopter.core.assets.TexturesDefinitions.SPARK_0
 import com.gadarts.helicopter.core.assets.TexturesDefinitions.PROPELLER_BLURRED
 import com.gadarts.helicopter.core.components.ComponentsMapper
-import com.gadarts.helicopter.core.components.child.ChildModel
+import com.gadarts.helicopter.core.components.child.ChildDecal
 import com.gadarts.helicopter.core.systems.GameEntitySystem
 import com.gadarts.helicopter.core.systems.HudSystemEventsSubscriber
 import com.gadarts.helicopter.core.systems.Notifier
@@ -284,30 +285,31 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
         transform.setTranslation(position)
     }
 
-    private fun addPlayer(engine: PooledEngine, assetsManager: GameAssetManager): Entity {
+    private fun addPlayer(engine: PooledEngine, am: GameAssetManager): Entity {
         EntityBuilder.initialize(engine)
-        val entityBuilder = EntityBuilder.begin()
-            .addModelInstanceComponent(
-                assetsManager.getModel(ModelsDefinitions.APACHE),
-                auxVector3_1.set(0F, 2F, 2F)
-            )
+        val apacheModel = am.getModel(ModelsDefinitions.APACHE)
+        val startPos = auxVector3_1.set(0F, 2F, 2F)
+        val entityBuilder = EntityBuilder.begin().addModelInstanceComponent(apacheModel, startPos)
         if (DefaultGameSettings.DISPLAY_PROPELLER) {
-            entityBuilder.addChildModelInstanceComponent(
-                listOf(
-                    ChildModel(
-                        ModelInstance(propellerBlurredModel),
-                        Vector3.Y,
-                        Vector3.Zero
-                    ),
-                ),
-                true
-            )
+            addPropeller(am, entityBuilder)
         }
-        return entityBuilder.addAmbSoundComponent(assetsManager.getSound(SfxDefinitions.PROPELLER))
+        val sparkTextureRegion = TextureRegion(am.getTexture(SPARK_0))
+        return entityBuilder.addAmbSoundComponent(am.getSound(SfxDefinitions.PROPELLER))
             .addCharacterComponent(INITIAL_HP)
             .addPlayerComponent()
-            .addArmComponent(sparkModel)
+            .addArmComponent(newDecal(SPARK_SIZE, SPARK_SIZE, sparkTextureRegion, true))
             .finishAndAddToEngine()
+    }
+
+    private fun addPropeller(
+        am: GameAssetManager,
+        entityBuilder: EntityBuilder
+    ) {
+        val propTextureRegion = TextureRegion(am.getTexture(PROPELLER_BLURRED))
+        val propDec = newDecal(PROP_SIZE, PROP_SIZE, propTextureRegion, true)
+        propDec.rotateX(90F)
+        val decals = listOf(ChildDecal(propDec, Vector3.Zero))
+        entityBuilder.addChildDecalComponent(decals, true)
     }
 
     override fun onPrimaryWeaponButtonPressed() {
@@ -338,6 +340,8 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
         private const val DECELERATION = 0.01F
         private const val IDLE_Z_TILT_DEGREES = 12F
         private const val STRAFE_PRESS_INTERVAL = 500
-        private const val PRIMARY_RELOAD_DURATION = 250L
+        private const val PRIMARY_RELOAD_DURATION = 125L
+        private const val PROP_SIZE = 2F
+        private const val SPARK_SIZE = 0.4F
     }
 }

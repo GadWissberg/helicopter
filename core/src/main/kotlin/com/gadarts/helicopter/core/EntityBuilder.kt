@@ -4,10 +4,11 @@ import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.PooledEngine
 import com.badlogic.gdx.audio.Sound
 import com.badlogic.gdx.graphics.g3d.Model
+import com.badlogic.gdx.graphics.g3d.decals.Decal
 import com.badlogic.gdx.math.Vector3
 import com.gadarts.helicopter.core.components.*
-import com.gadarts.helicopter.core.components.child.ChildModelInstanceComponent
-import com.gadarts.helicopter.core.components.child.ChildModel
+import com.gadarts.helicopter.core.components.child.ChildDecalComponent
+import com.gadarts.helicopter.core.components.child.ChildDecal
 
 class EntityBuilder private constructor() {
     fun addModelInstanceComponent(model: Model, position: Vector3): EntityBuilder {
@@ -24,12 +25,12 @@ class EntityBuilder private constructor() {
         return result!!
     }
 
-    fun addChildModelInstanceComponent(
-        models: List<ChildModel>,
+    fun addChildDecalComponent(
+        decals: List<ChildDecal>,
         animateRotation: Boolean
     ): EntityBuilder {
-        val component = engine.createComponent(ChildModelInstanceComponent::class.java)
-        component.init(models, animateRotation)
+        val component = engine.createComponent(ChildDecalComponent::class.java)
+        component.init(decals, animateRotation)
         entity!!.add(component)
         return instance
 
@@ -56,9 +57,9 @@ class EntityBuilder private constructor() {
         return instance
     }
 
-    fun addArmComponent(muzzleModel: Model): EntityBuilder {
+    fun addArmComponent(decal: Decal): EntityBuilder {
         val armComponent = engine.createComponent(ArmComponent::class.java)
-        armComponent.init(muzzleModel)
+        armComponent.init(decal)
         entity!!.add(armComponent)
         return instance
     }

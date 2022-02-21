@@ -10,8 +10,10 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import com.badlogic.gdx.graphics.g3d.ModelInstance
+import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy
+import com.badlogic.gdx.graphics.g3d.decals.Decal
+import com.badlogic.gdx.graphics.g3d.decals.DecalBatch
 import com.badlogic.gdx.math.Quaternion
-import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
 import com.badlogic.gdx.utils.Disposable
@@ -20,7 +22,8 @@ import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.components.ArmComponent
 import com.gadarts.helicopter.core.components.ComponentsMapper
 import com.gadarts.helicopter.core.components.ModelInstanceComponent
-import com.gadarts.helicopter.core.components.child.ChildModel
+import com.gadarts.helicopter.core.components.child.ChildDecal
+import com.gadarts.helicopter.core.components.child.ChildDecalComponent
 import com.gadarts.helicopter.core.systems.GameEntitySystem
 import com.gadarts.helicopter.core.systems.player.PlayerSystemEventsSubscriber
 import kotlin.math.max
@@ -28,6 +31,8 @@ import kotlin.math.max
 class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscriber {
 
 
+    private lateinit var childrenEntities: ImmutableArray<Entity>
+    private lateinit var decalBatch: DecalBatch
     private lateinit var armEntities: ImmutableArray<Entity>
     private lateinit var modelBatch: ModelBatch
     private lateinit var modelInstanceEntities: ImmutableArray<Entity>
@@ -35,10 +40,13 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
 
     override fun addedToEngine(engine: Engine?) {
         super.addedToEngine(engine)
+        decalBatch = DecalBatch(DECALS_POOL_SIZE, CameraGroupStrategy(commonData.camera))
         val modelInstanceFamily = Family.all(ModelInstanceComponent::class.java).get()
         modelInstanceEntities = getEngine().getEntitiesFor(modelInstanceFamily)
         val armFamily = Family.all(ArmComponent::class.java).get()
         armEntities = getEngine().getEntitiesFor(armFamily)
+        val childrenFamily = Family.all(ChildDecalComponent::class.java).get()
+        childrenEntities = getEngine().getEntitiesFor(childrenFamily)
         modelBatch = ModelBatch()
     }
 
@@ -52,7 +60,20 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
     override fun update(deltaTime: Float) {
         super.update(deltaTime)
         resetDisplay(Color.BLACK)
-        renderModels(deltaTime)
+        renderModels()
+        renderDecals(deltaTime)
+    }
+
+    private fun renderDecals(deltaTime: Float) {
+        Gdx.gl.glDepthMask(false)
+        for (entity in armEntities) {
+            renderSpark(entity)
+        }
+        for (entity in childrenEntities) {
+            renderChildren(entity, deltaTime)
+        }
+        decalBatch.flush()
+        Gdx.gl.glDepthMask(true)
     }
 
     private fun isVisible(entity: Entity): Boolean {
@@ -66,78 +87,74 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
         return commonData.camera.frustum.boundsInFrustum(center, dims)
     }
 
-    private fun renderModels(deltaTime: Float) {
+    private fun renderModels() {
         modelBatch.begin(commonData.camera)
         axisModelHandler.render(modelBatch)
         for (entity in modelInstanceEntities) {
             if (isVisible(entity)) {
-                renderModel(entity, deltaTime)
-                renderSpark(entity)
+                renderModel(entity)
             }
         }
         modelBatch.end()
     }
 
     private fun renderSpark(entity: Entity) {
-        if (ComponentsMapper.arm.has(entity)) {
-            val armComponent = ComponentsMapper.arm.get(entity)
-            if (TimeUtils.timeSinceMillis(armComponent.displaySpark) <= SPARK_DURATION) {
-                val modelInstance = ComponentsMapper.modelInstance.get(entity).modelInstance
-                modelInstance.transform.getRotation(auxQuat)
-                armComponent.modelInstance.transform.getScale(auxVector3_2)
-                armComponent.modelInstance.transform
-                    .setToTranslation(modelInstance.transform.getTranslation(auxVector3_1))
-                    .scale(auxVector3_2.x, auxVector3_2.y, auxVector3_2.z)
-                    .rotate(auxQuat)
-                    .translate(2F, 0F, 0F)
-                modelBatch.render(armComponent.modelInstance)
-            }
+        val armComp = ComponentsMapper.arm.get(entity)
+        if (TimeUtils.timeSinceMillis(armComp.displaySpark) <= SPARK_DURATION) {
+            val modelInstance = ComponentsMapper.modelInstance.get(entity).modelInstance
+            val sparkDecal = positionSpark(armComp, modelInstance)
+            decalBatch.add(sparkDecal)
         }
     }
 
-    private fun renderModel(entity: Entity?, deltaTime: Float) {
+    private fun positionSpark(
+        armComp: ArmComponent,
+        modelInstance: ModelInstance
+    ): Decal {
+        val decal = armComp.sparkDecal
+        decal.position = modelInstance.transform.getTranslation(auxVector3_1)
+        decal.position.add(
+            auxVector3_1.set(1F, 0F, 0F)
+                .rot(modelInstance.transform)
+                .scl(0.65F)
+        )
+        decal.position.y -= SPARK_HEIGHT_BIAS
+        return decal
+    }
+
+    private fun renderModel(entity: Entity?) {
         val modelInstance = ComponentsMapper.modelInstance.get(entity).modelInstance
         modelBatch.render(modelInstance)
-        renderChildren(entity, modelInstance, deltaTime)
     }
 
     private fun renderChildren(
-        entity: Entity?,
-        modelInstance: ModelInstance,
-        deltaTime: Float
+        entity: Entity,
+        deltaTime: Float,
     ) {
-        if (ComponentsMapper.childModelInstance.has(entity)) {
-            val childComponent = ComponentsMapper.childModelInstance.get(entity)
-            val children = childComponent.modelInstances
-            for (child in children) {
-                renderChild(child, deltaTime, modelInstance)
-            }
+        val childComponent = ComponentsMapper.childDecal.get(entity)
+        val children = childComponent.decals
+        val modelInstance = ComponentsMapper.modelInstance.get(entity).modelInstance
+        val parentPosition = modelInstance.transform.getTranslation(auxVector3_1)
+        val parentRotation = modelInstance.transform.getRotation(auxQuat)
+        for (child in children) {
+            renderChild(child, parentRotation, deltaTime, parentPosition)
         }
     }
 
     private fun renderChild(
-        child: ChildModel,
+        child: ChildDecal,
+        parentRotation: Quaternion?,
         deltaTime: Float,
-        modelInstance: ModelInstance
+        parentPosition: Vector3?
     ) {
-        updateChildTransformation(modelInstance, child, deltaTime)
-        modelBatch.render(child.modelInstance)
+        child.decal.rotation = parentRotation
+        child.decal.rotateX(90F)
+        child.decal.rotateZ(child.rotationStep.angle())
+        child.rotationStep.setAngle(child.rotationStep.angle() + ROT_STEP * deltaTime)
+        child.decal.position = parentPosition
+        decalBatch.add(child.decal)
     }
 
-    private fun updateChildTransformation(
-        modelInstance: ModelInstance,
-        child: ChildModel,
-        deltaTime: Float
-    ) {
-        val parentRot = modelInstance.transform.getRotation(auxQuat)
-        val transform = child.modelInstance.transform
-        transform.setFromEulerAnglesRad(parentRot.yawRad, parentRot.pitchRad, parentRot.rollRad)
-        transform.setTranslation(modelInstance.transform.getTranslation(auxVector3_1))
-        val node = child.modelInstance.nodes[0]
-        node.isAnimated = true
-        node.localTransform.rotate(child.rotationAxis, ROT_STEP * deltaTime)
-        child.modelInstance.calculateTransforms()
-    }
 
     override fun initialize(am: GameAssetManager) {
 
@@ -153,10 +170,11 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
     companion object {
         val auxVector3_1 = Vector3()
         val auxVector3_2 = Vector3()
-        val auxVector2_1 = Vector2()
         val auxQuat = Quaternion()
         val auxBox = BoundingBox()
         const val ROT_STEP = 1600F
-        const val SPARK_DURATION = 75L
+        const val SPARK_DURATION = 40L
+        const val DECALS_POOL_SIZE = 200
+        const val SPARK_HEIGHT_BIAS = 0.3F
     }
 }
