@@ -342,6 +342,6 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
         private const val STRAFE_PRESS_INTERVAL = 500
         private const val PRIMARY_RELOAD_DURATION = 125L
         private const val PROP_SIZE = 2F
-        private const val SPARK_SIZE = 0.4F
+        private const val SPARK_SIZE = 0.3F
     }
 }

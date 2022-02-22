@@ -116,7 +116,7 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
         decal.position.add(
             auxVector3_1.set(1F, 0F, 0F)
                 .rot(modelInstance.transform)
-                .scl(0.65F)
+                .scl(SPARK_FORWARD_BIAS)
         )
         decal.position.y -= SPARK_HEIGHT_BIAS
         return decal
@@ -175,6 +175,7 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
         const val ROT_STEP = 1600F
         const val SPARK_DURATION = 40L
         const val DECALS_POOL_SIZE = 200
-        const val SPARK_HEIGHT_BIAS = 0.3F
+        const val SPARK_HEIGHT_BIAS = 0.37F
+        const val SPARK_FORWARD_BIAS = 0.55F
     }
 }
