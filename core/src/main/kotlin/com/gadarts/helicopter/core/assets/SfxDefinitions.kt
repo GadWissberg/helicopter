@@ -5,7 +5,8 @@ import com.badlogic.gdx.audio.Sound
 import java.util.Locale.ROOT
 
 enum class SfxDefinitions : AssetDefinition<Sound> {
-    PROPELLER;
+    PROPELLER,
+    MACHINE_GUN;
 
     private var path: String = "sfx/${name.toLowerCase(ROOT)}.wav"
 

@@ -6,6 +6,7 @@ import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.utils.ImmutableArray
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Gdx.graphics
+import com.badlogic.gdx.audio.Sound
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.g3d.ModelBatch
@@ -13,6 +14,7 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy
 import com.badlogic.gdx.graphics.g3d.decals.Decal
 import com.badlogic.gdx.graphics.g3d.decals.DecalBatch
+import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Quaternion
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
@@ -24,6 +26,8 @@ import com.gadarts.helicopter.core.components.ComponentsMapper
 import com.gadarts.helicopter.core.components.ModelInstanceComponent
 import com.gadarts.helicopter.core.components.child.ChildDecal
 import com.gadarts.helicopter.core.components.child.ChildDecalComponent
+import com.gadarts.helicopter.core.systems.CommonData.Companion.SPARK_FORWARD_BIAS
+import com.gadarts.helicopter.core.systems.CommonData.Companion.SPARK_HEIGHT_BIAS
 import com.gadarts.helicopter.core.systems.GameEntitySystem
 import com.gadarts.helicopter.core.systems.player.PlayerSystemEventsSubscriber
 import kotlin.math.max
@@ -102,9 +106,19 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
         val armComp = ComponentsMapper.arm.get(entity)
         if (TimeUtils.timeSinceMillis(armComp.displaySpark) <= SPARK_DURATION) {
             val modelInstance = ComponentsMapper.modelInstance.get(entity).modelInstance
-            val sparkDecal = positionSpark(armComp, modelInstance)
-            decalBatch.add(sparkDecal)
+            val decal = positionSpark(armComp, modelInstance)
+            val frame = armComp.sparkFrames[MathUtils.random(armComp.sparkFrames.size - 1)]
+            if (decal.textureRegion != frame) {
+                decal.textureRegion = frame
+            }
+            faceDecalToCamera(decal)
+            decalBatch.add(decal)
         }
+    }
+
+    private fun faceDecalToCamera(decal: Decal) {
+        val camera = commonData.camera
+        decal.lookAt(auxVector3_1.set(decal.position).sub(camera.direction), camera.up)
     }
 
     private fun positionSpark(
@@ -164,7 +178,11 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
         modelBatch.dispose()
     }
 
-    override fun onPlayerPrimaryWeaponShot() {
+    override fun onPlayerPrimaryWeaponShot(
+        player: Entity,
+        bulletModelInstance: ModelInstance,
+        primaryShootingSound: Sound
+    ) {
     }
 
     companion object {
@@ -175,7 +193,5 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
         const val ROT_STEP = 1600F
         const val SPARK_DURATION = 40L
         const val DECALS_POOL_SIZE = 200
-        const val SPARK_HEIGHT_BIAS = 0.37F
-        const val SPARK_FORWARD_BIAS = 0.55F
     }
 }

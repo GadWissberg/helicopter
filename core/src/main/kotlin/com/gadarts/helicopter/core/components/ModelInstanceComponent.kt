@@ -10,7 +10,15 @@ class ModelInstanceComponent : GameComponent() {
     private val boundingBox = BoundingBox()
 
     fun init(model: Model, position: Vector3) {
-        this.modelInstance = ModelInstance(model)
+        val modelInstance = ModelInstance(model)
+        initialize(modelInstance, position)
+    }
+
+    private fun initialize(
+        modelInstance1: ModelInstance,
+        position: Vector3
+    ) {
+        this.modelInstance = modelInstance1
         this.modelInstance.transform.translate(position)
         modelInstance.calculateBoundingBox(boundingBox)
     }
@@ -20,6 +28,10 @@ class ModelInstanceComponent : GameComponent() {
 
     fun getBoundingBox(auxBox: BoundingBox): BoundingBox {
         return auxBox.set(boundingBox)
+    }
+
+    fun init(model: ModelInstance, position: Vector3) {
+        initialize(model, position)
     }
 
 }

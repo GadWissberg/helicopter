@@ -14,5 +14,7 @@ object ComponentsMapper {
         ComponentMapper.getFor(PlayerComponent::class.java)
     val arm: ComponentMapper<ArmComponent> =
         ComponentMapper.getFor(ArmComponent::class.java)
+    val bullet: ComponentMapper<BulletComponent> =
+        ComponentMapper.getFor(BulletComponent::class.java)
 
 }

@@ -54,7 +54,7 @@ class HudSystem : GameEntitySystem(), Notifier<HudSystemEventsSubscriber> {
     override fun initialize(am: GameAssetManager) {
         val ui = (commonData.stage.actors.first {
             val name = it.name
-            name != null && name.equals(SystemsData.UI_TABLE_NAME)
+            name != null && name.equals(CommonData.UI_TABLE_NAME)
         }) as Table
         addJoystick(ui, am)
         addWeaponButton(am, ui, ICON_BULLETS, clickListener = priWeaponButtonClickListener)
@@ -96,7 +96,7 @@ class HudSystem : GameEntitySystem(), Notifier<HudSystemEventsSubscriber> {
         super.addedToEngine(engine)
         val uiTable = Table()
         uiTable.debug(if (DefaultGameSettings.UI_DEBUG) Table.Debug.all else Table.Debug.none)
-        uiTable.name = SystemsData.UI_TABLE_NAME
+        uiTable.name = CommonData.UI_TABLE_NAME
         uiTable.setFillParent(true)
         uiTable.setSize(Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
         uiTable.align(Align.bottom)

@@ -7,7 +7,8 @@ import java.util.Locale.ROOT
 enum class ModelsDefinitions : AssetDefinition<Model> {
     APACHE,
     PROPELLER,
-    BACK_PROPELLER, ;
+    BACK_PROPELLER,
+    BULLET;
 
     private var path: String = "models/${name.toLowerCase(ROOT)}.g3dj"
 

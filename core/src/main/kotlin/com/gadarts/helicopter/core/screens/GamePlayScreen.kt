@@ -23,7 +23,7 @@ class GamePlayScreen(
     @Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES_WARNING")
     override fun show() {
         this.engine = PooledEngine()
-        val data = SystemsData(assetsManager)
+        val data = CommonData(assetsManager)
         addSystems(data)
         initializeSubscriptions()
         engine.systems.forEach {
@@ -38,9 +38,10 @@ class GamePlayScreen(
         hudSystem.subscribeForEvents(engine.getSystem(PlayerSystem::class.java))
         val playerSystem = engine.getSystem(PlayerSystem::class.java)
         playerSystem.subscribeForEvents(engine.getSystem(RenderSystem::class.java))
+        playerSystem.subscribeForEvents(engine.getSystem(CharacterSystem::class.java))
     }
 
-    private fun addSystems(data: SystemsData) {
+    private fun addSystems(data: CommonData) {
         addSystem(PlayerSystem(), data)
         addSystem(RenderSystem(), data)
         addSystem(CameraSystem(), data)
@@ -50,7 +51,7 @@ class GamePlayScreen(
         addSystem(ProfilingSystem(), data)
     }
 
-    private fun addSystem(system: GameEntitySystem, data: SystemsData) {
+    private fun addSystem(system: GameEntitySystem, data: CommonData) {
         system.commonData = data
         system.soundPlayer = soundPlayer
         system.assetsManager = assetsManager

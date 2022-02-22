@@ -8,7 +8,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.assets.TexturesDefinitions
 
-class SystemsData(assetsManager: GameAssetManager) {
+class CommonData(assetsManager: GameAssetManager) {
     var touchpad: Touchpad
     val camera: PerspectiveCamera = PerspectiveCamera(
         FOV,
@@ -33,6 +33,7 @@ class SystemsData(assetsManager: GameAssetManager) {
         const val DEAD_ZONE = 15F
         const val FOV = 67F
         const val UI_TABLE_NAME = "ui_table"
-
+        const val SPARK_FORWARD_BIAS = 0.55F
+        const val SPARK_HEIGHT_BIAS = 0.37F
     }
 }

@@ -3,6 +3,7 @@ package com.gadarts.helicopter.core.systems.player
 import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.PooledEngine
+import com.badlogic.gdx.audio.Sound
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.VertexAttributes.Usage.*
 import com.badlogic.gdx.graphics.g2d.TextureRegion
@@ -45,6 +46,8 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
     Notifier<PlayerSystemEventsSubscriber> {
 
 
+    private lateinit var primaryShootingSound: Sound
+    private lateinit var bulletsPool: BulletsPool
     private var primaryShooting: Boolean = false
     private lateinit var sparkModel: Model
     private lateinit var propellerBlurredModel: Model
@@ -55,7 +58,12 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
     private lateinit var player: Entity
     private val desiredVelocity = Vector2()
     override val subscribers = HashSet<PlayerSystemEventsSubscriber>()
+
     override fun initialize(am: GameAssetManager) {
+        bulletsPool = BulletsPool(am.getModel(ModelsDefinitions.BULLET))
+        primaryShootingSound = am.getSound(SfxDefinitions.MACHINE_GUN)
+        player = addPlayer(engine as PooledEngine, assetsManager)
+
     }
 
     private fun createPropellerBlurredModel(assetsManager: GameAssetManager) {
@@ -105,7 +113,6 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
         super.addedToEngine(engine)
         createSparkModel(assetsManager)
         createPropellerBlurredModel(assetsManager)
-        player = addPlayer(engine as PooledEngine, assetsManager)
         commonData.touchpad.addListener(object : ClickListener() {
             override fun touchDown(
                 event: InputEvent?,
@@ -217,7 +224,13 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
         if (armComponent.loaded <= now) {
             armComponent.displaySpark = now
             armComponent.loaded = now + PRIMARY_RELOAD_DURATION
-            subscribers.forEach { it.onPlayerPrimaryWeaponShot() }
+            subscribers.forEach {
+                it.onPlayerPrimaryWeaponShot(
+                    player,
+                    bulletsPool.obtain(),
+                    primaryShootingSound
+                )
+            }
         }
     }
 
@@ -293,11 +306,14 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
         if (DefaultGameSettings.DISPLAY_PROPELLER) {
             addPropeller(am, entityBuilder)
         }
-        val sparkTextureRegion = TextureRegion(am.getTexture(SPARK_0))
+        val spark0 = TextureRegion(am.getTexture(SPARK_0))
+        val spark1 = TextureRegion(am.getTexture(TexturesDefinitions.SPARK_1))
+        val spark2 = TextureRegion(am.getTexture(TexturesDefinitions.SPARK_2))
+        val sparkFrames = listOf(spark0, spark1, spark2)
         return entityBuilder.addAmbSoundComponent(am.getSound(SfxDefinitions.PROPELLER))
             .addCharacterComponent(INITIAL_HP)
             .addPlayerComponent()
-            .addArmComponent(newDecal(SPARK_SIZE, SPARK_SIZE, sparkTextureRegion, true))
+            .addArmComponent(sparkFrames, newDecal(SPARK_SIZE, SPARK_SIZE, spark0, true))
             .finishAndAddToEngine()
     }
 
