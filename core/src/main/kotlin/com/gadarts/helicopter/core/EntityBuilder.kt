@@ -3,7 +3,6 @@ package com.gadarts.helicopter.core
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.PooledEngine
 import com.badlogic.gdx.audio.Sound
-import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.graphics.g3d.Model
 import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.graphics.g3d.decals.Decal
@@ -67,36 +66,37 @@ class EntityBuilder private constructor() {
     }
 
     fun addPrimaryArmComponent(
-        sparkFrames: List<TextureRegion>,
         decal: Decal,
-        shootingSound: Sound
+        armProperties: ArmProperties
     ): EntityBuilder {
-        return addArmComponent(PrimaryArmComponent::class.java, decal, sparkFrames, shootingSound)
+        return addArmComponent(
+            PrimaryArmComponent::class.java,
+            decal,
+            armProperties
+        )
     }
 
     fun addSecondaryArmComponent(
-        sparkFrames: List<TextureRegion>,
         decal: Decal,
-        shootingSound: Sound
+        armProperties: ArmProperties
     ): EntityBuilder {
-        return addArmComponent(SecondaryArmComponent::class.java, decal, sparkFrames, shootingSound)
+        return addArmComponent(SecondaryArmComponent::class.java, decal, armProperties)
     }
 
     private fun addArmComponent(
         armComponentType: Class<out ArmComponent>,
         decal: Decal,
-        sparkFrames: List<TextureRegion>,
-        shootingSound: Sound
+        armProperties: ArmProperties,
     ): EntityBuilder {
         val armComponent = engine.createComponent(armComponentType)
-        armComponent.init(decal, sparkFrames, shootingSound)
+        armComponent.init(decal, armProperties)
         entity!!.add(armComponent)
         return instance
     }
 
-    fun addBulletComponent(position: Vector3): EntityBuilder {
+    fun addBulletComponent(position: Vector3, speed: Float): EntityBuilder {
         val bulletComponent = engine.createComponent(BulletComponent::class.java)
-        bulletComponent.init(position)
+        bulletComponent.init(position, speed)
         entity!!.add(bulletComponent)
         return instance
     }

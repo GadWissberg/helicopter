@@ -29,11 +29,11 @@ import com.gadarts.helicopter.core.assets.TexturesDefinitions
 import com.gadarts.helicopter.core.assets.TexturesDefinitions.SPARK_0
 import com.gadarts.helicopter.core.assets.TexturesDefinitions.PROPELLER_BLURRED
 import com.gadarts.helicopter.core.components.ArmComponent
+import com.gadarts.helicopter.core.components.ArmProperties
 import com.gadarts.helicopter.core.components.ComponentsMapper
 import com.gadarts.helicopter.core.components.child.ChildDecal
-import com.gadarts.helicopter.core.systems.GameEntitySystem
-import com.gadarts.helicopter.core.systems.HudSystemEventsSubscriber
-import com.gadarts.helicopter.core.systems.Notifier
+import com.gadarts.helicopter.core.systems.*
+import com.gadarts.helicopter.core.systems.CommonData.Companion.SPARK_HEIGHT_BIAS
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -46,9 +46,10 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
     Notifier<PlayerSystemEventsSubscriber> {
 
 
-    private lateinit var bulletsPool: BulletsPool
-    private var primaryShooting: Boolean = false
-    private var secondaryShooting: Boolean = false
+    private lateinit var priBulletsPool: BulletsPool
+    private lateinit var secBulletsPool: BulletsPool
+    private var priShooting: Boolean = false
+    private var secShooting: Boolean = false
     private lateinit var sparkModel: Model
     private lateinit var propellerBlurredModel: Model
     private var lastTouchDown: Long = 0
@@ -60,9 +61,9 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
     override val subscribers = HashSet<PlayerSystemEventsSubscriber>()
 
     override fun initialize(am: GameAssetManager) {
-        bulletsPool = BulletsPool(am.getModel(ModelsDefinitions.BULLET))
+        priBulletsPool = BulletsPool(am.getModel(ModelsDefinitions.BULLET))
+        secBulletsPool = BulletsPool(am.getModel(ModelsDefinitions.BULLET))
         player = addPlayer(engine as PooledEngine, assetsManager)
-
     }
 
     private fun createPropellerBlurredModel(assetsManager: GameAssetManager) {
@@ -213,20 +214,39 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
         handleAcceleration()
         takeStep(deltaTime)
         tiltAnimationHandler.update(player)
-        handleShooting(primaryShooting, ComponentsMapper.primaryArm.get(player), bulletsPool)
+        handleShootings()
     }
 
-    private fun handleShooting(
-        shooting: Boolean, armComp: ArmComponent, pool: BulletsPool
-    ) {
+    private fun handleShootings() {
+        var armComp: ArmComponent = ComponentsMapper.primaryArm.get(player)
+        handleShooting(priShooting, armComp, priBulletsPool)
+        armComp = ComponentsMapper.secondaryArm.get(player)
+        handleShooting(secShooting, armComp, secBulletsPool)
+    }
+
+    private fun handleShooting(shooting: Boolean, armComp: ArmComponent, pool: BulletsPool) {
         if (!shooting) return
         val now = TimeUtils.millis()
         if (armComp.loaded <= now) {
             armComp.displaySpark = now
-            armComp.loaded = now + PRIMARY_RELOAD_DURATION
-            val model = pool.obtain()
-            subscribers.forEach { it.onPlayerWeaponShot(player, model, armComp.shootingSound) }
+            armComp.loaded = now + armComp.armProperties.reloadDuration
+            val pos = calculateBulletRelativePosition()
+            subscribers.forEach {
+                it.onPlayerWeaponShot(
+                    player,
+                    pool.obtain(),
+                    armComp,
+                    pos
+                )
+            }
         }
+    }
+
+    private fun calculateBulletRelativePosition(): Vector3 {
+        val transform = ComponentsMapper.modelInstance.get(player).modelInstance.transform
+        val pos = auxVector3_1.set(1F, 0F, 0F).rot(transform).scl(SPARK_HEIGHT_BIAS)
+        pos.y -= SPARK_HEIGHT_BIAS
+        return pos
     }
 
     private fun handleRotation(deltaTime: Float) {
@@ -305,13 +325,15 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
         val spark1 = TextureRegion(am.getTexture(TexturesDefinitions.SPARK_1))
         val spark2 = TextureRegion(am.getTexture(TexturesDefinitions.SPARK_2))
         val sparkFrames = listOf(spark0, spark1, spark2)
-        val primaryShootingSound = am.getSound(SfxDefinitions.MACHINE_GUN)
+        val priSnd = am.getSound(SfxDefinitions.MACHINE_GUN)
         val decal = newDecal(SPARK_SIZE, SPARK_SIZE, spark0, true)
+        val priArmProperties = ArmProperties(sparkFrames, priSnd, PRI_RELOAD_DUR, PRI_BULLET_SPEED)
+        val secArmProperties = ArmProperties(sparkFrames, priSnd, SEC_RELOAD_DUR, SEC_BULLET_SPEED)
         return entityBuilder.addAmbSoundComponent(am.getSound(SfxDefinitions.PROPELLER))
             .addCharacterComponent(INITIAL_HP)
             .addPlayerComponent()
-            .addPrimaryArmComponent(sparkFrames, decal, primaryShootingSound)
-            .addSecondaryArmComponent(sparkFrames, decal, primaryShootingSound)
+            .addPrimaryArmComponent(decal, priArmProperties)
+            .addSecondaryArmComponent(decal, secArmProperties)
             .finishAndAddToEngine()
     }
 
@@ -327,19 +349,19 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
     }
 
     override fun onPrimaryWeaponButtonPressed() {
-        primaryShooting = true
+        priShooting = true
     }
 
     override fun onPrimaryWeaponButtonReleased() {
-        primaryShooting = false
+        priShooting = false
     }
 
     override fun onSecondaryWeaponButtonPressed() {
-        secondaryShooting = true
+        secShooting = true
     }
 
     override fun onSecondaryWeaponButtonReleased() {
-        secondaryShooting = false
+        secShooting = false
     }
 
     companion object {
@@ -356,8 +378,11 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
         private const val DECELERATION = 0.01F
         private const val IDLE_Z_TILT_DEGREES = 12F
         private const val STRAFE_PRESS_INTERVAL = 500
-        private const val PRIMARY_RELOAD_DURATION = 125L
+        private const val PRI_RELOAD_DUR = 125L
+        private const val SEC_RELOAD_DUR = 1000L
         private const val PROP_SIZE = 2F
         private const val SPARK_SIZE = 0.3F
+        private const val PRI_BULLET_SPEED = 32F
+        private const val SEC_BULLET_SPEED = 16F
     }
 }

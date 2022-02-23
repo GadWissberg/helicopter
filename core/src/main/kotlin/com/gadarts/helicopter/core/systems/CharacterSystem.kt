@@ -12,9 +12,9 @@ import com.gadarts.helicopter.core.EntityBuilder
 import com.gadarts.helicopter.core.GeneralUtils
 import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.components.AmbSoundComponent
+import com.gadarts.helicopter.core.components.ArmComponent
 import com.gadarts.helicopter.core.components.BulletComponent
 import com.gadarts.helicopter.core.components.ComponentsMapper
-import com.gadarts.helicopter.core.systems.CommonData.Companion.SPARK_HEIGHT_BIAS
 import com.gadarts.helicopter.core.systems.player.PlayerSystemEventsSubscriber
 
 class CharacterSystem : GameEntitySystem(), PlayerSystemEventsSubscriber {
@@ -35,7 +35,8 @@ class CharacterSystem : GameEntitySystem(), PlayerSystemEventsSubscriber {
     private fun handleBullets(deltaTime: Float) {
         for (bullet in bulletEntities) {
             val transform = ComponentsMapper.modelInstance.get(bullet).modelInstance.transform
-            transform.trn(getDirectionOfModel(bullet).nor().scl(BULLET_SPEED * deltaTime))
+            val speed = ComponentsMapper.bullet.get(bullet).speed
+            transform.trn(getDirectionOfModel(bullet).nor().scl(speed * deltaTime))
             val currentPosition = transform.getTranslation(auxVector1)
             val dst = ComponentsMapper.bullet.get(bullet).initialPosition.dst2(currentPosition)
             if (dst > BULLET_MAX_DISTANCE || currentPosition.y <= 0) {
@@ -89,30 +90,17 @@ class CharacterSystem : GameEntitySystem(), PlayerSystemEventsSubscriber {
         })
     }
 
-    override fun onPlayerWeaponShot(
-        player: Entity,
-        bulletModelInstance: ModelInstance,
-        primaryShootingSound: Sound
-    ) {
-        createBullet(player, bulletModelInstance)
-        soundPlayer.playPositionalSound(
-            primaryShootingSound,
-            randomPitch = false,
-            player,
-            commonData.camera
-        )
-    }
-
     private fun createBullet(
         player: Entity,
-        bulletModelInstance: ModelInstance
+        bulletModelInstance: ModelInstance,
+        speed: Float,
+        relativePosition: Vector3
     ) {
         val transform = ComponentsMapper.modelInstance.get(player).modelInstance.transform
         val position = transform.getTranslation(auxVector1)
-        position.add(auxVector2.set(1F, 0F, 0F).rot(transform).scl(SPARK_HEIGHT_BIAS))
-        position.y -= SPARK_HEIGHT_BIAS
+        position.add(relativePosition)
         EntityBuilder.begin().addModelInstanceComponent(bulletModelInstance, position)
-            .addBulletComponent(position)
+            .addBulletComponent(position, speed)
             .finishAndAddToEngine()
         tiltBullet(bulletModelInstance.transform, transform)
     }
@@ -138,7 +126,22 @@ class CharacterSystem : GameEntitySystem(), PlayerSystemEventsSubscriber {
         val auxVector2 = Vector3()
         val auxQuat = Quaternion()
         const val BULLET_MAX_DISTANCE = 100F
-        const val BULLET_SPEED = 32F
         const val BULLET_TILT_BIAS = 0.8F
+    }
+
+    override fun onPlayerWeaponShot(
+        player: Entity,
+        bulletModelInstance: ModelInstance,
+        armComponent: ArmComponent,
+        relativePosition: Vector3
+    ) {
+        val armProperties = armComponent.armProperties
+        createBullet(player, bulletModelInstance, armProperties.speed, relativePosition)
+        soundPlayer.playPositionalSound(
+            armProperties.shootingSound,
+            randomPitch = false,
+            player,
+            commonData.camera
+        )
     }
 }

@@ -21,6 +21,7 @@ import com.badlogic.gdx.math.collision.BoundingBox
 import com.badlogic.gdx.utils.Disposable
 import com.badlogic.gdx.utils.TimeUtils
 import com.gadarts.helicopter.core.assets.GameAssetManager
+import com.gadarts.helicopter.core.components.ArmComponent
 import com.gadarts.helicopter.core.components.PrimaryArmComponent
 import com.gadarts.helicopter.core.components.ComponentsMapper
 import com.gadarts.helicopter.core.components.ModelInstanceComponent
@@ -107,7 +108,8 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
         if (TimeUtils.timeSinceMillis(armComp.displaySpark) <= SPARK_DURATION) {
             val modelInstance = ComponentsMapper.modelInstance.get(entity).modelInstance
             val decal = positionSpark(armComp, modelInstance)
-            val frame = armComp.sparkFrames[MathUtils.random(armComp.sparkFrames.size - 1)]
+            val sparkFrames = armComp.armProperties.sparkFrames
+            val frame = sparkFrames[MathUtils.random(sparkFrames.size - 1)]
             if (decal.textureRegion != frame) {
                 decal.textureRegion = frame
             }
@@ -178,13 +180,6 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
         modelBatch.dispose()
     }
 
-    override fun onPlayerWeaponShot(
-        player: Entity,
-        bulletModelInstance: ModelInstance,
-        primaryShootingSound: Sound
-    ) {
-    }
-
     companion object {
         val auxVector3_1 = Vector3()
         val auxVector3_2 = Vector3()
@@ -193,5 +188,13 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
         const val ROT_STEP = 1600F
         const val SPARK_DURATION = 40L
         const val DECALS_POOL_SIZE = 200
+    }
+
+    override fun onPlayerWeaponShot(
+        player: Entity,
+        bulletModelInstance: ModelInstance,
+        armComponent: ArmComponent,
+        relativePosition: Vector3
+    ) {
     }
 }
