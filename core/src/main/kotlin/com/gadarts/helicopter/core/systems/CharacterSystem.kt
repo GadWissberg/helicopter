@@ -2,8 +2,8 @@ package com.gadarts.helicopter.core.systems
 
 import com.badlogic.ashley.core.*
 import com.badlogic.ashley.utils.ImmutableArray
-import com.badlogic.gdx.audio.Sound
 import com.badlogic.gdx.graphics.g3d.ModelInstance
+import com.badlogic.gdx.graphics.g3d.decals.Decal
 import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Matrix4
 import com.badlogic.gdx.math.Quaternion
@@ -11,11 +11,9 @@ import com.badlogic.gdx.math.Vector3
 import com.gadarts.helicopter.core.EntityBuilder
 import com.gadarts.helicopter.core.GeneralUtils
 import com.gadarts.helicopter.core.assets.GameAssetManager
-import com.gadarts.helicopter.core.components.AmbSoundComponent
-import com.gadarts.helicopter.core.components.ArmComponent
-import com.gadarts.helicopter.core.components.BulletComponent
-import com.gadarts.helicopter.core.components.ComponentsMapper
+import com.gadarts.helicopter.core.components.*
 import com.gadarts.helicopter.core.systems.player.PlayerSystemEventsSubscriber
+import com.gadarts.helicopter.core.systems.render.RenderSystem
 
 class CharacterSystem : GameEntitySystem(), PlayerSystemEventsSubscriber {
 
@@ -132,10 +130,14 @@ class CharacterSystem : GameEntitySystem(), PlayerSystemEventsSubscriber {
     override fun onPlayerWeaponShot(
         player: Entity,
         bulletModelInstance: ModelInstance,
-        armComponent: ArmComponent,
-        relativePosition: Vector3
+        arm: ArmComponent,
     ) {
-        val armProperties = armComponent.armProperties
+        val relativePosition = arm.relativePos
+        positionSpark(
+            arm, ComponentsMapper.modelInstance.get(player).modelInstance,
+            relativePosition
+        )
+        val armProperties = arm.armProperties
         createBullet(player, bulletModelInstance, armProperties.speed, relativePosition)
         soundPlayer.playPositionalSound(
             armProperties.shootingSound,
@@ -144,4 +146,16 @@ class CharacterSystem : GameEntitySystem(), PlayerSystemEventsSubscriber {
             commonData.camera
         )
     }
+
+    private fun positionSpark(
+        armComp: ArmComponent,
+        modelInstance: ModelInstance,
+        relativePosition: Vector3
+    ): Decal {
+        val decal = armComp.sparkDecal
+        decal.position = modelInstance.transform.getTranslation(RenderSystem.auxVector3_1)
+        decal.position.add(relativePosition)
+        return decal
+    }
+
 }

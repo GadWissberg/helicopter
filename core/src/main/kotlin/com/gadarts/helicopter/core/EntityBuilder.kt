@@ -67,29 +67,38 @@ class EntityBuilder private constructor() {
 
     fun addPrimaryArmComponent(
         decal: Decal,
-        armProperties: ArmProperties
+        armProperties: ArmProperties,
+        priCalculateRelativePosition: ArmComponent.CalculateRelativePosition
     ): EntityBuilder {
         return addArmComponent(
             PrimaryArmComponent::class.java,
             decal,
-            armProperties
+            armProperties,
+            priCalculateRelativePosition
         )
     }
 
     fun addSecondaryArmComponent(
         decal: Decal,
-        armProperties: ArmProperties
+        armProperties: ArmProperties,
+        secCalculateRelativePosition: ArmComponent.CalculateRelativePosition
     ): EntityBuilder {
-        return addArmComponent(SecondaryArmComponent::class.java, decal, armProperties)
+        return addArmComponent(
+            SecondaryArmComponent::class.java,
+            decal,
+            armProperties,
+            secCalculateRelativePosition
+        )
     }
 
     private fun addArmComponent(
         armComponentType: Class<out ArmComponent>,
         decal: Decal,
         armProperties: ArmProperties,
+        calculateRelativePosition: ArmComponent.CalculateRelativePosition,
     ): EntityBuilder {
         val armComponent = engine.createComponent(armComponentType)
-        armComponent.init(decal, armProperties)
+        armComponent.init(decal, armProperties, calculateRelativePosition)
         entity!!.add(armComponent)
         return instance
     }
@@ -102,6 +111,7 @@ class EntityBuilder private constructor() {
     }
 
     companion object {
+
         private lateinit var instance: EntityBuilder
         var entity: Entity? = null
         lateinit var engine: PooledEngine
@@ -114,6 +124,5 @@ class EntityBuilder private constructor() {
             this.engine = engine
             this.instance = EntityBuilder()
         }
-
     }
 }

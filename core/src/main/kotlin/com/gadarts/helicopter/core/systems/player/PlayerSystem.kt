@@ -46,6 +46,7 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
     Notifier<PlayerSystemEventsSubscriber> {
 
 
+    private var secondaryCreationSide = false
     private lateinit var priBulletsPool: BulletsPool
     private lateinit var secBulletsPool: BulletsPool
     private var priShooting: Boolean = false
@@ -62,7 +63,7 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
 
     override fun initialize(am: GameAssetManager) {
         priBulletsPool = BulletsPool(am.getModel(ModelsDefinitions.BULLET))
-        secBulletsPool = BulletsPool(am.getModel(ModelsDefinitions.BULLET))
+        secBulletsPool = BulletsPool(am.getModel(ModelsDefinitions.MISSILE))
         player = addPlayer(engine as PooledEngine, assetsManager)
     }
 
@@ -228,25 +229,17 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
         if (!shooting) return
         val now = TimeUtils.millis()
         if (armComp.loaded <= now) {
+            armComp.calculateRelativePosition(player)
             armComp.displaySpark = now
             armComp.loaded = now + armComp.armProperties.reloadDuration
-            val pos = calculateBulletRelativePosition()
             subscribers.forEach {
                 it.onPlayerWeaponShot(
                     player,
                     pool.obtain(),
-                    armComp,
-                    pos
+                    armComp
                 )
             }
         }
-    }
-
-    private fun calculateBulletRelativePosition(): Vector3 {
-        val transform = ComponentsMapper.modelInstance.get(player).modelInstance.transform
-        val pos = auxVector3_1.set(1F, 0F, 0F).rot(transform).scl(SPARK_HEIGHT_BIAS)
-        pos.y -= SPARK_HEIGHT_BIAS
-        return pos
     }
 
     private fun handleRotation(deltaTime: Float) {
@@ -326,14 +319,37 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
         val spark2 = TextureRegion(am.getTexture(TexturesDefinitions.SPARK_2))
         val sparkFrames = listOf(spark0, spark1, spark2)
         val priSnd = am.getSound(SfxDefinitions.MACHINE_GUN)
-        val decal = newDecal(SPARK_SIZE, SPARK_SIZE, spark0, true)
+        val secSnd = am.getSound(SfxDefinitions.MISSILE)
+        val priDecal = newDecal(PRI_SPARK_SIZE, PRI_SPARK_SIZE, spark0, true)
+        val secDecal = newDecal(SEC_SPARK_SIZE, SEC_SPARK_SIZE, spark0, true)
         val priArmProperties = ArmProperties(sparkFrames, priSnd, PRI_RELOAD_DUR, PRI_BULLET_SPEED)
-        val secArmProperties = ArmProperties(sparkFrames, priSnd, SEC_RELOAD_DUR, SEC_BULLET_SPEED)
+        val secArmProperties = ArmProperties(sparkFrames, secSnd, SEC_RELOAD_DUR, SEC_BULLET_SPEED)
+        val priCalculateRelativePosition = object : ArmComponent.CalculateRelativePosition {
+            override fun calculate(parent: Entity): Vector3 {
+                val transform = ComponentsMapper.modelInstance.get(parent).modelInstance.transform
+                val pos = auxVector3_1.set(1F, 0F, 0F).rot(transform).scl(
+                    CommonData.SPARK_FORWARD_BIAS
+                )
+                pos.y -= SPARK_HEIGHT_BIAS
+                return pos
+            }
+        }
+        val secCalculateRelativePosition = object : ArmComponent.CalculateRelativePosition {
+            override fun calculate(parent: Entity): Vector3 {
+                secondaryCreationSide = !secondaryCreationSide
+                val transform = ComponentsMapper.modelInstance.get(player).modelInstance.transform
+                val pos =
+                    auxVector3_1.set(0.2F, 0F, if (secondaryCreationSide) 1F else -1F)
+                        .rot(transform).scl(SECONDARY_POSITION_BIAS)
+                pos.y -= SPARK_HEIGHT_BIAS
+                return pos
+            }
+        }
         return entityBuilder.addAmbSoundComponent(am.getSound(SfxDefinitions.PROPELLER))
             .addCharacterComponent(INITIAL_HP)
             .addPlayerComponent()
-            .addPrimaryArmComponent(decal, priArmProperties)
-            .addSecondaryArmComponent(decal, secArmProperties)
+            .addPrimaryArmComponent(priDecal, priArmProperties, priCalculateRelativePosition)
+            .addSecondaryArmComponent(secDecal, secArmProperties, secCalculateRelativePosition)
             .finishAndAddToEngine()
     }
 
@@ -379,10 +395,12 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
         private const val IDLE_Z_TILT_DEGREES = 12F
         private const val STRAFE_PRESS_INTERVAL = 500
         private const val PRI_RELOAD_DUR = 125L
-        private const val SEC_RELOAD_DUR = 1000L
+        private const val SEC_RELOAD_DUR = 2000L
         private const val PROP_SIZE = 2F
-        private const val SPARK_SIZE = 0.3F
+        private const val PRI_SPARK_SIZE = 0.3F
+        private const val SEC_SPARK_SIZE = 0.6F
         private const val PRI_BULLET_SPEED = 32F
-        private const val SEC_BULLET_SPEED = 16F
+        private const val SEC_BULLET_SPEED = 8F
+        private const val SECONDARY_POSITION_BIAS = 0.3F
     }
 }

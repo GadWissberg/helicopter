@@ -6,7 +6,8 @@ import java.util.Locale.ROOT
 
 enum class SfxDefinitions : AssetDefinition<Sound> {
     PROPELLER,
-    MACHINE_GUN;
+    MACHINE_GUN,
+    MISSILE;
 
     private var path: String = "sfx/${name.toLowerCase(ROOT)}.wav"
 

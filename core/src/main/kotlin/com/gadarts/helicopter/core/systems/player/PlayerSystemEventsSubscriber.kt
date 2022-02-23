@@ -10,8 +10,7 @@ interface PlayerSystemEventsSubscriber : SystemEventsSubscriber {
     fun onPlayerWeaponShot(
         player: Entity,
         bulletModelInstance: ModelInstance,
-        armComponent: ArmComponent,
-        relativePosition: Vector3
+        arm: ArmComponent,
     )
 
 }
