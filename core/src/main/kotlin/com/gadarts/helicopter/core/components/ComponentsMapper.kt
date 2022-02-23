@@ -12,8 +12,10 @@ object ComponentsMapper {
         ComponentMapper.getFor(AmbSoundComponent::class.java)
     val player: ComponentMapper<PlayerComponent> =
         ComponentMapper.getFor(PlayerComponent::class.java)
-    val arm: ComponentMapper<ArmComponent> =
-        ComponentMapper.getFor(ArmComponent::class.java)
+    val primaryArm: ComponentMapper<PrimaryArmComponent> =
+        ComponentMapper.getFor(PrimaryArmComponent::class.java)
+    val secondaryArm: ComponentMapper<SecondaryArmComponent> =
+        ComponentMapper.getFor(SecondaryArmComponent::class.java)
     val bullet: ComponentMapper<BulletComponent> =
         ComponentMapper.getFor(BulletComponent::class.java)
 

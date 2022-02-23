@@ -7,7 +7,7 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.gadarts.helicopter.core.systems.SystemEventsSubscriber
 
 interface PlayerSystemEventsSubscriber : SystemEventsSubscriber {
-    fun onPlayerPrimaryWeaponShot(
+    fun onPlayerWeaponShot(
         player: Entity,
         bulletModelInstance: ModelInstance,
         primaryShootingSound: Sound

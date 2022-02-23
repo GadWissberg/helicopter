@@ -66,9 +66,30 @@ class EntityBuilder private constructor() {
         return instance
     }
 
-    fun addArmComponent(sparkFrames: List<TextureRegion>, decal: Decal): EntityBuilder {
-        val armComponent = engine.createComponent(ArmComponent::class.java)
-        armComponent.init(decal, sparkFrames)
+    fun addPrimaryArmComponent(
+        sparkFrames: List<TextureRegion>,
+        decal: Decal,
+        shootingSound: Sound
+    ): EntityBuilder {
+        return addArmComponent(PrimaryArmComponent::class.java, decal, sparkFrames, shootingSound)
+    }
+
+    fun addSecondaryArmComponent(
+        sparkFrames: List<TextureRegion>,
+        decal: Decal,
+        shootingSound: Sound
+    ): EntityBuilder {
+        return addArmComponent(SecondaryArmComponent::class.java, decal, sparkFrames, shootingSound)
+    }
+
+    private fun addArmComponent(
+        armComponentType: Class<out ArmComponent>,
+        decal: Decal,
+        sparkFrames: List<TextureRegion>,
+        shootingSound: Sound
+    ): EntityBuilder {
+        val armComponent = engine.createComponent(armComponentType)
+        armComponent.init(decal, sparkFrames, shootingSound)
         entity!!.add(armComponent)
         return instance
     }

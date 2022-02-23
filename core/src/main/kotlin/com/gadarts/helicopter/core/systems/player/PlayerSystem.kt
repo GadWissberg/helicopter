@@ -3,7 +3,6 @@ package com.gadarts.helicopter.core.systems.player
 import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.PooledEngine
-import com.badlogic.gdx.audio.Sound
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.VertexAttributes.Usage.*
 import com.badlogic.gdx.graphics.g2d.TextureRegion
@@ -29,6 +28,7 @@ import com.gadarts.helicopter.core.assets.SfxDefinitions
 import com.gadarts.helicopter.core.assets.TexturesDefinitions
 import com.gadarts.helicopter.core.assets.TexturesDefinitions.SPARK_0
 import com.gadarts.helicopter.core.assets.TexturesDefinitions.PROPELLER_BLURRED
+import com.gadarts.helicopter.core.components.ArmComponent
 import com.gadarts.helicopter.core.components.ComponentsMapper
 import com.gadarts.helicopter.core.components.child.ChildDecal
 import com.gadarts.helicopter.core.systems.GameEntitySystem
@@ -46,9 +46,9 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
     Notifier<PlayerSystemEventsSubscriber> {
 
 
-    private lateinit var primaryShootingSound: Sound
     private lateinit var bulletsPool: BulletsPool
     private var primaryShooting: Boolean = false
+    private var secondaryShooting: Boolean = false
     private lateinit var sparkModel: Model
     private lateinit var propellerBlurredModel: Model
     private var lastTouchDown: Long = 0
@@ -61,7 +61,6 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
 
     override fun initialize(am: GameAssetManager) {
         bulletsPool = BulletsPool(am.getModel(ModelsDefinitions.BULLET))
-        primaryShootingSound = am.getSound(SfxDefinitions.MACHINE_GUN)
         player = addPlayer(engine as PooledEngine, assetsManager)
 
     }
@@ -214,23 +213,19 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
         handleAcceleration()
         takeStep(deltaTime)
         tiltAnimationHandler.update(player)
-        handleShooting()
+        handleShooting(primaryShooting, ComponentsMapper.primaryArm.get(player), bulletsPool)
     }
 
-    private fun handleShooting() {
-        if (!primaryShooting) return
-        val armComponent = ComponentsMapper.arm.get(player)
+    private fun handleShooting(
+        shooting: Boolean, armComp: ArmComponent, pool: BulletsPool
+    ) {
+        if (!shooting) return
         val now = TimeUtils.millis()
-        if (armComponent.loaded <= now) {
-            armComponent.displaySpark = now
-            armComponent.loaded = now + PRIMARY_RELOAD_DURATION
-            subscribers.forEach {
-                it.onPlayerPrimaryWeaponShot(
-                    player,
-                    bulletsPool.obtain(),
-                    primaryShootingSound
-                )
-            }
+        if (armComp.loaded <= now) {
+            armComp.displaySpark = now
+            armComp.loaded = now + PRIMARY_RELOAD_DURATION
+            val model = pool.obtain()
+            subscribers.forEach { it.onPlayerWeaponShot(player, model, armComp.shootingSound) }
         }
     }
 
@@ -310,10 +305,13 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
         val spark1 = TextureRegion(am.getTexture(TexturesDefinitions.SPARK_1))
         val spark2 = TextureRegion(am.getTexture(TexturesDefinitions.SPARK_2))
         val sparkFrames = listOf(spark0, spark1, spark2)
+        val primaryShootingSound = am.getSound(SfxDefinitions.MACHINE_GUN)
+        val decal = newDecal(SPARK_SIZE, SPARK_SIZE, spark0, true)
         return entityBuilder.addAmbSoundComponent(am.getSound(SfxDefinitions.PROPELLER))
             .addCharacterComponent(INITIAL_HP)
             .addPlayerComponent()
-            .addArmComponent(sparkFrames, newDecal(SPARK_SIZE, SPARK_SIZE, spark0, true))
+            .addPrimaryArmComponent(sparkFrames, decal, primaryShootingSound)
+            .addSecondaryArmComponent(sparkFrames, decal, primaryShootingSound)
             .finishAndAddToEngine()
     }
 
@@ -337,9 +335,11 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
     }
 
     override fun onSecondaryWeaponButtonPressed() {
+        secondaryShooting = true
     }
 
     override fun onSecondaryWeaponButtonReleased() {
+        secondaryShooting = false
     }
 
     companion object {

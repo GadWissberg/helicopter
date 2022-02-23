@@ -21,7 +21,7 @@ import com.badlogic.gdx.math.collision.BoundingBox
 import com.badlogic.gdx.utils.Disposable
 import com.badlogic.gdx.utils.TimeUtils
 import com.gadarts.helicopter.core.assets.GameAssetManager
-import com.gadarts.helicopter.core.components.ArmComponent
+import com.gadarts.helicopter.core.components.PrimaryArmComponent
 import com.gadarts.helicopter.core.components.ComponentsMapper
 import com.gadarts.helicopter.core.components.ModelInstanceComponent
 import com.gadarts.helicopter.core.components.child.ChildDecal
@@ -47,7 +47,7 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
         decalBatch = DecalBatch(DECALS_POOL_SIZE, CameraGroupStrategy(commonData.camera))
         val modelInstanceFamily = Family.all(ModelInstanceComponent::class.java).get()
         modelInstanceEntities = getEngine().getEntitiesFor(modelInstanceFamily)
-        val armFamily = Family.all(ArmComponent::class.java).get()
+        val armFamily = Family.all(PrimaryArmComponent::class.java).get()
         armEntities = getEngine().getEntitiesFor(armFamily)
         val childrenFamily = Family.all(ChildDecalComponent::class.java).get()
         childrenEntities = getEngine().getEntitiesFor(childrenFamily)
@@ -103,7 +103,7 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
     }
 
     private fun renderSpark(entity: Entity) {
-        val armComp = ComponentsMapper.arm.get(entity)
+        val armComp = ComponentsMapper.primaryArm.get(entity)
         if (TimeUtils.timeSinceMillis(armComp.displaySpark) <= SPARK_DURATION) {
             val modelInstance = ComponentsMapper.modelInstance.get(entity).modelInstance
             val decal = positionSpark(armComp, modelInstance)
@@ -122,10 +122,10 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
     }
 
     private fun positionSpark(
-        armComp: ArmComponent,
+        primaryArmComp: PrimaryArmComponent,
         modelInstance: ModelInstance
     ): Decal {
-        val decal = armComp.sparkDecal
+        val decal = primaryArmComp.sparkDecal
         decal.position = modelInstance.transform.getTranslation(auxVector3_1)
         decal.position.add(
             auxVector3_1.set(1F, 0F, 0F)
@@ -178,7 +178,7 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
         modelBatch.dispose()
     }
 
-    override fun onPlayerPrimaryWeaponShot(
+    override fun onPlayerWeaponShot(
         player: Entity,
         bulletModelInstance: ModelInstance,
         primaryShootingSound: Sound

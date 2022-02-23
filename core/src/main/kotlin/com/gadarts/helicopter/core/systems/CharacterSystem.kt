@@ -89,7 +89,7 @@ class CharacterSystem : GameEntitySystem(), PlayerSystemEventsSubscriber {
         })
     }
 
-    override fun onPlayerPrimaryWeaponShot(
+    override fun onPlayerWeaponShot(
         player: Entity,
         bulletModelInstance: ModelInstance,
         primaryShootingSound: Sound
