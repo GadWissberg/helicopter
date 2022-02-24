@@ -1,4 +1,4 @@
-package com.gadarts.helicopter.core.systems
+package com.gadarts.helicopter.core.systems.character
 
 import com.badlogic.ashley.core.*
 import com.badlogic.ashley.utils.ImmutableArray
@@ -11,10 +11,17 @@ import com.badlogic.gdx.math.Vector3
 import com.gadarts.helicopter.core.EntityBuilder
 import com.gadarts.helicopter.core.GeneralUtils
 import com.gadarts.helicopter.core.assets.GameAssetManager
-import com.gadarts.helicopter.core.components.*
+import com.gadarts.helicopter.core.components.AmbSoundComponent
+import com.gadarts.helicopter.core.components.ArmComponent
+import com.gadarts.helicopter.core.components.BulletComponent
+import com.gadarts.helicopter.core.components.ComponentsMapper
+import com.gadarts.helicopter.core.systems.GameEntitySystem
 import com.gadarts.helicopter.core.systems.player.PlayerSystemEventsSubscriber
 import com.gadarts.helicopter.core.systems.render.RenderSystem
 
+/**
+ * Responsible for updating general character behavior and related entities such as bullets.
+ */
 class CharacterSystem : GameEntitySystem(), PlayerSystemEventsSubscriber {
 
     private lateinit var bulletEntities: ImmutableArray<Entity>
@@ -33,8 +40,7 @@ class CharacterSystem : GameEntitySystem(), PlayerSystemEventsSubscriber {
     private fun handleBullets(deltaTime: Float) {
         for (bullet in bulletEntities) {
             val transform = ComponentsMapper.modelInstance.get(bullet).modelInstance.transform
-            val speed = ComponentsMapper.bullet.get(bullet).speed
-            transform.trn(getDirectionOfModel(bullet).nor().scl(speed * deltaTime))
+            takeStepForBullet(bullet, transform, deltaTime)
             val currentPosition = transform.getTranslation(auxVector1)
             val dst = ComponentsMapper.bullet.get(bullet).initialPosition.dst2(currentPosition)
             if (dst > BULLET_MAX_DISTANCE || currentPosition.y <= 0) {
@@ -42,6 +48,15 @@ class CharacterSystem : GameEntitySystem(), PlayerSystemEventsSubscriber {
                 pooledEngine.removeEntity(bullet)
             }
         }
+    }
+
+    private fun takeStepForBullet(
+        bullet: Entity,
+        transform: Matrix4,
+        deltaTime: Float
+    ) {
+        val speed = ComponentsMapper.bullet.get(bullet).speed
+        transform.trn(getDirectionOfModel(bullet).nor().scl(speed * deltaTime))
     }
 
     private fun update3dSound() {
@@ -119,14 +134,6 @@ class CharacterSystem : GameEntitySystem(), PlayerSystemEventsSubscriber {
         return auxVector2
     }
 
-    companion object {
-        val auxVector1 = Vector3()
-        val auxVector2 = Vector3()
-        val auxQuat = Quaternion()
-        const val BULLET_MAX_DISTANCE = 100F
-        const val BULLET_TILT_BIAS = 0.8F
-    }
-
     override fun onPlayerWeaponShot(
         player: Entity,
         bulletModelInstance: ModelInstance,
@@ -156,6 +163,14 @@ class CharacterSystem : GameEntitySystem(), PlayerSystemEventsSubscriber {
         decal.position = modelInstance.transform.getTranslation(RenderSystem.auxVector3_1)
         decal.position.add(relativePosition)
         return decal
+    }
+
+    companion object {
+        private val auxVector1 = Vector3()
+        private val auxVector2 = Vector3()
+        private val auxQuat = Quaternion()
+        private const val BULLET_MAX_DISTANCE = 100F
+        private const val BULLET_TILT_BIAS = 0.8F
     }
 
 }

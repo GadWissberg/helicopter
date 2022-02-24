@@ -1,7 +1,8 @@
-package com.gadarts.helicopter.core.systems
+package com.gadarts.helicopter.core.systems.hud
 
 import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton
 import com.badlogic.gdx.scenes.scene2d.ui.Table
@@ -11,9 +12,12 @@ import com.badlogic.gdx.utils.Align
 import com.gadarts.helicopter.core.DefaultGameSettings
 import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.assets.TexturesDefinitions
-import com.gadarts.helicopter.core.assets.TexturesDefinitions.*
+import com.gadarts.helicopter.core.systems.CommonData
+import com.gadarts.helicopter.core.systems.GameEntitySystem
+import com.gadarts.helicopter.core.systems.Notifier
 
 class HudSystem : GameEntitySystem(), Notifier<HudSystemEventsSubscriber> {
+    private lateinit var debugInput: CameraInputController
 
 
     private val priWeaponButtonClickListener = object : ClickListener() {
@@ -57,12 +61,13 @@ class HudSystem : GameEntitySystem(), Notifier<HudSystemEventsSubscriber> {
             name != null && name.equals(CommonData.UI_TABLE_NAME)
         }) as Table
         addJoystick(ui, am)
-        addWeaponButton(am, ui, ICON_BULLETS, clickListener = priWeaponButtonClickListener)
-        addWeaponButton(am, ui, ICON_MISSILES, JOYSTICK_PADDING_LEFT, secWeaponButtonClickListener)
+        addWeaponButton(am, ui, TexturesDefinitions.ICON_BULLETS, clickListener = priWeaponButtonClickListener)
+        addWeaponButton(am, ui,
+            TexturesDefinitions.ICON_MISSILES, JOYSTICK_PADDING_LEFT, secWeaponButtonClickListener)
     }
 
     private fun addJoystick(ui: Table, assetsManager: GameAssetManager) {
-        val joystickTexture = assetsManager.getTexture(JOYSTICK)
+        val joystickTexture = assetsManager.getTexture(TexturesDefinitions.JOYSTICK)
         ui.add(commonData.touchpad)
             .size(joystickTexture.width.toFloat(), joystickTexture.height.toFloat())
             .pad(0F, JOYSTICK_PADDING_LEFT, JOYSTICK_PADDING_BOTTOM, 0F)
@@ -77,8 +82,8 @@ class HudSystem : GameEntitySystem(), Notifier<HudSystemEventsSubscriber> {
         rightPadding: Float = 0F,
         clickListener: ClickListener
     ) {
-        val up = TextureRegionDrawable(assetsManager.getTexture(BUTTON_UP))
-        val down = TextureRegionDrawable(assetsManager.getTexture(BUTTON_DOWN))
+        val up = TextureRegionDrawable(assetsManager.getTexture(TexturesDefinitions.BUTTON_UP))
+        val down = TextureRegionDrawable(assetsManager.getTexture(TexturesDefinitions.BUTTON_DOWN))
         val icon = TextureRegionDrawable(assetsManager.getTexture(iconDefinition))
         val button = ImageButton(ImageButton.ImageButtonStyle(up, down, null, icon, null, null))
         ui.add(button)
@@ -94,6 +99,21 @@ class HudSystem : GameEntitySystem(), Notifier<HudSystemEventsSubscriber> {
 
     override fun addedToEngine(engine: Engine?) {
         super.addedToEngine(engine)
+        initializeInput()
+        addUiTable()
+    }
+
+    private fun initializeInput() {
+        if (DefaultGameSettings.DEBUG_INPUT) {
+            debugInput = CameraInputController(commonData.camera)
+            debugInput.autoUpdate = true
+            Gdx.input.inputProcessor = debugInput
+        } else {
+            Gdx.input.inputProcessor = commonData.stage
+        }
+    }
+
+    private fun addUiTable() {
         val uiTable = Table()
         uiTable.debug(if (DefaultGameSettings.UI_DEBUG) Table.Debug.all else Table.Debug.none)
         uiTable.name = CommonData.UI_TABLE_NAME
@@ -105,6 +125,9 @@ class HudSystem : GameEntitySystem(), Notifier<HudSystemEventsSubscriber> {
 
     override fun update(deltaTime: Float) {
         super.update(deltaTime)
+        if (DefaultGameSettings.DEBUG_INPUT) {
+            debugInput.update()
+        }
         commonData.stage.act(deltaTime)
         commonData.stage.draw()
     }

@@ -1,4 +1,4 @@
-package com.gadarts.helicopter.core.systems
+package com.gadarts.helicopter.core.systems.camera
 
 import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.Vector3
 import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.components.ComponentsMapper
 import com.gadarts.helicopter.core.components.PlayerComponent
+import com.gadarts.helicopter.core.systems.GameEntitySystem
 
 class CameraSystem : GameEntitySystem() {
 

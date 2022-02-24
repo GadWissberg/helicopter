@@ -15,7 +15,7 @@ class TiltAnimationHandler {
         rotTiltDegrees = 0F
     }
 
-    fun increaseRotationTilt(rotToAdd: Float) {
+    private fun increaseRotationTilt(rotToAdd: Float) {
         rotTiltDegrees += if (rotToAdd > 0) -ROT_TILT_STEP_SIZE else ROT_TILT_STEP_SIZE
         rotTiltDegrees = MathUtils.clamp(rotTiltDegrees, -ROT_TILT_MAX_DEG, ROT_TILT_MAX_DEG)
     }

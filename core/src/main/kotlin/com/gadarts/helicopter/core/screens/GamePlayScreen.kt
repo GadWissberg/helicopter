@@ -5,7 +5,11 @@ import com.badlogic.gdx.Screen
 import com.gadarts.helicopter.core.SoundPlayer
 import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.systems.*
+import com.gadarts.helicopter.core.systems.camera.CameraSystem
+import com.gadarts.helicopter.core.systems.character.CharacterSystem
+import com.gadarts.helicopter.core.systems.hud.HudSystem
 import com.gadarts.helicopter.core.systems.player.PlayerSystem
+import com.gadarts.helicopter.core.systems.profiling.ProfilingSystem
 import com.gadarts.helicopter.core.systems.render.RenderSystem
 
 
@@ -47,7 +51,6 @@ class GamePlayScreen(
         addSystem(CameraSystem(), data)
         addSystem(CharacterSystem(), data)
         addSystem(HudSystem(), data)
-        addSystem(InputSystem(), data)
         addSystem(ProfilingSystem(), data)
     }
 

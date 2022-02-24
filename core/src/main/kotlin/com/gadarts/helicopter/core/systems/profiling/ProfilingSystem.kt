@@ -1,4 +1,4 @@
-package com.gadarts.helicopter.core.systems
+package com.gadarts.helicopter.core.systems.profiling
 
 import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.Gdx
@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.profiling.GLProfiler
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.gadarts.helicopter.core.DefaultGameSettings
 import com.gadarts.helicopter.core.assets.GameAssetManager
+import com.gadarts.helicopter.core.systems.GameEntitySystem
 
 class ProfilingSystem : GameEntitySystem() {
 

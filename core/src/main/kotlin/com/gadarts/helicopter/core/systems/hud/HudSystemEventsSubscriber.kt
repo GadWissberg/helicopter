@@ -1,4 +1,6 @@
-package com.gadarts.helicopter.core.systems
+package com.gadarts.helicopter.core.systems.hud
+
+import com.gadarts.helicopter.core.systems.SystemEventsSubscriber
 
 interface HudSystemEventsSubscriber : SystemEventsSubscriber {
     fun onPrimaryWeaponButtonPressed()
