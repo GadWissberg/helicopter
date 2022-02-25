@@ -24,7 +24,6 @@ class GamePlayScreen(
 
     private lateinit var engine: PooledEngine
 
-    @Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES_WARNING")
     override fun show() {
         this.engine = PooledEngine()
         val data = CommonData(assetsManager)
@@ -52,6 +51,7 @@ class GamePlayScreen(
         addSystem(CharacterSystem(), data)
         addSystem(HudSystem(), data)
         addSystem(ProfilingSystem(), data)
+        addSystem(MapSystem(), data)
     }
 
     private fun addSystem(system: GameEntitySystem, data: CommonData) {

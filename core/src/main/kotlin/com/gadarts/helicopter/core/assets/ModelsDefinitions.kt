@@ -9,7 +9,8 @@ enum class ModelsDefinitions : AssetDefinition<Model> {
     PROPELLER,
     BACK_PROPELLER,
     BULLET,
-    MISSILE;
+    MISSILE,
+    PALM_TREE_1;
 
     private var path: String = "models/${name.toLowerCase(ROOT)}.g3dj"
 
