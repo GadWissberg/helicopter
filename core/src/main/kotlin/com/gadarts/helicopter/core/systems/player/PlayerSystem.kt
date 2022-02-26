@@ -88,7 +88,8 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
         assetsManager: GameAssetManager,
         textureDefinition: TexturesDefinitions
     ): Material {
-        val material = Material(createDiffuse(assetsManager.getTexture(textureDefinition)))
+        val material =
+            Material(createDiffuse(assetsManager.getAssetByDefinition(textureDefinition)))
         material.set(BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA))
         return material
     }
@@ -133,7 +134,6 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
     }
 
 
-
     private fun touchPadTouched(actor: Actor) {
         val deltaX = (actor as Touchpad).knobPercentX
         val deltaY = actor.knobPercentY
@@ -141,34 +141,27 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
     }
 
 
-
     override fun update(deltaTime: Float) {
         super.update(deltaTime)
-        playerMovementHandler.update(player,deltaTime)
+        playerMovementHandler.update(player, deltaTime)
         playerShootingHandler.update(player, subscribers)
     }
 
 
-
-
-
-
-
-
     private fun addPlayer(engine: PooledEngine, am: GameAssetManager): Entity {
         EntityBuilder.initialize(engine)
-        val apacheModel = am.getModel(ModelsDefinitions.APACHE)
+        val apacheModel = am.getAssetByDefinition(ModelsDefinitions.APACHE)
         val startPos = auxVector3_1.set(0F, 2F, 2F)
         val entityBuilder = EntityBuilder.begin().addModelInstanceComponent(apacheModel, startPos)
         if (DefaultGameSettings.DISPLAY_PROPELLER) {
             addPropeller(am, entityBuilder)
         }
-        val spark0 = TextureRegion(am.getTexture(SPARK_0))
-        val spark1 = TextureRegion(am.getTexture(TexturesDefinitions.SPARK_1))
-        val spark2 = TextureRegion(am.getTexture(TexturesDefinitions.SPARK_2))
+        val spark0 = TextureRegion(am.getAssetByDefinition(SPARK_0))
+        val spark1 = TextureRegion(am.getAssetByDefinition(TexturesDefinitions.SPARK_1))
+        val spark2 = TextureRegion(am.getAssetByDefinition(TexturesDefinitions.SPARK_2))
         val sparkFrames = listOf(spark0, spark1, spark2)
-        val priSnd = am.getSound(SfxDefinitions.MACHINE_GUN)
-        val secSnd = am.getSound(SfxDefinitions.MISSILE)
+        val priSnd = am.getAssetByDefinition(SfxDefinitions.MACHINE_GUN)
+        val secSnd = am.getAssetByDefinition(SfxDefinitions.MISSILE)
         val priDecal = newDecal(PRI_SPARK_SIZE, PRI_SPARK_SIZE, spark0, true)
         val secDecal = newDecal(SEC_SPARK_SIZE, SEC_SPARK_SIZE, spark0, true)
         val priArmProperties = ArmProperties(sparkFrames, priSnd, PRI_RELOAD_DUR, PRI_BULLET_SPEED)
@@ -199,7 +192,7 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
                 return pos
             }
         }
-        return entityBuilder.addAmbSoundComponent(am.getSound(SfxDefinitions.PROPELLER))
+        return entityBuilder.addAmbSoundComponent(am.getAssetByDefinition(SfxDefinitions.PROPELLER))
             .addCharacterComponent(INITIAL_HP)
             .addPlayerComponent()
             .addPrimaryArmComponent(priDecal, priArmProperties, priCalculateRelativePosition)
@@ -211,7 +204,7 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
         am: GameAssetManager,
         entityBuilder: EntityBuilder
     ) {
-        val propTextureRegion = TextureRegion(am.getTexture(PROPELLER_BLURRED))
+        val propTextureRegion = TextureRegion(am.getAssetByDefinition(PROPELLER_BLURRED))
         val propDec = newDecal(PROP_SIZE, PROP_SIZE, propTextureRegion, true)
         propDec.rotateX(90F)
         val decals = listOf(ChildDecal(propDec, Vector3.Zero))

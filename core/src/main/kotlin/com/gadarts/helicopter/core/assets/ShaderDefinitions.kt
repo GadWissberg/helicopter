@@ -6,10 +6,14 @@ import java.util.*
 enum class ShaderDefinitions : AssetDefinition<String> {
     ;
 
-    private var path: String = "shaders/${name.toLowerCase(Locale.ROOT)}.shader"
+    private val paths = ArrayList<String>()
 
-    override fun getPath(): String {
-        return path
+    init {
+        initializePaths("shaders/%s.shader")
+    }
+
+    override fun getPaths(): ArrayList<String> {
+        return paths
     }
 
     override fun getParameters(): AssetLoaderParameters<String>? {

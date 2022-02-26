@@ -6,7 +6,8 @@ import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Touchpad
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.gadarts.helicopter.core.assets.GameAssetManager
-import com.gadarts.helicopter.core.assets.TexturesDefinitions
+import com.gadarts.helicopter.core.assets.TexturesDefinitions.JOYSTICK
+import com.gadarts.helicopter.core.assets.TexturesDefinitions.JOYSTICK_CENTER
 
 class CommonData(assetsManager: GameAssetManager) {
     var touchpad: Touchpad
@@ -18,10 +19,10 @@ class CommonData(assetsManager: GameAssetManager) {
     val stage: Stage = Stage()
 
     init {
-        val joystickTexture = assetsManager.getTexture(TexturesDefinitions.JOYSTICK)
+        val joystickTexture = assetsManager.getAssetByDefinition(JOYSTICK)
         val joystickDrawableTex = TextureRegionDrawable(joystickTexture)
         val joystickCenterTex =
-            TextureRegionDrawable(assetsManager.getTexture(TexturesDefinitions.JOYSTICK_CENTER))
+            TextureRegionDrawable(assetsManager.getAssetByDefinition(JOYSTICK_CENTER))
         touchpad = Touchpad(
             DEAD_ZONE,
             Touchpad.TouchpadStyle(joystickDrawableTex, joystickCenterTex)

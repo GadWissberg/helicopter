@@ -2,20 +2,20 @@ package com.gadarts.helicopter.core.assets
 
 import com.badlogic.gdx.assets.AssetLoaderParameters
 import com.badlogic.gdx.graphics.g3d.Model
-import java.util.Locale.ROOT
 
-enum class ModelsDefinitions : AssetDefinition<Model> {
-    APACHE,
-    PROPELLER,
-    BACK_PROPELLER,
-    BULLET,
-    MISSILE,
-    PALM_TREE_1;
+enum class ModelsDefinitions(fileNames: Int = 1) : AssetDefinition<Model> {
 
-    private var path: String = "models/${name.toLowerCase(ROOT)}.g3dj"
+    APACHE, PROPELLER, BACK_PROPELLER, BULLET, MISSILE, PALM_TREE(3);
 
-    override fun getPath(): String {
-        return path
+    private val paths = ArrayList<String>()
+    private val pathFormat = "models/%s.g3dj"
+
+    init {
+        initializePaths(pathFormat, fileNames)
+    }
+
+    override fun getPaths(): ArrayList<String> {
+        return paths
     }
 
     override fun getParameters(): AssetLoaderParameters<Model>? {
@@ -29,4 +29,5 @@ enum class ModelsDefinitions : AssetDefinition<Model> {
     override fun getDefinitionName(): String {
         return name
     }
+
 }

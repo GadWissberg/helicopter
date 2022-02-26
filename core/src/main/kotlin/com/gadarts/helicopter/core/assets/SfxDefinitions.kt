@@ -2,17 +2,21 @@ package com.gadarts.helicopter.core.assets
 
 import com.badlogic.gdx.assets.AssetLoaderParameters
 import com.badlogic.gdx.audio.Sound
-import java.util.Locale.ROOT
 
 enum class SfxDefinitions : AssetDefinition<Sound> {
+
     PROPELLER,
     MACHINE_GUN,
     MISSILE;
 
-    private var path: String = "sfx/${name.toLowerCase(ROOT)}.wav"
+    private val paths = ArrayList<String>()
 
-    override fun getPath(): String {
-        return path
+    init {
+        initializePaths("sfx/%s.wav")
+    }
+
+    override fun getPaths(): ArrayList<String> {
+        return paths
     }
 
     override fun getParameters(): AssetLoaderParameters<Sound>? {

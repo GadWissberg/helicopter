@@ -4,13 +4,10 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.assets.AssetManager
 import com.badlogic.gdx.assets.loaders.FileHandleResolver
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver
-import com.badlogic.gdx.audio.Sound
-import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGeneratorLoader
 import com.badlogic.gdx.graphics.g2d.freetype.FreetypeFontLoader
-import com.badlogic.gdx.graphics.g3d.Model
 
 /**
  * Responsible to load the assets.
@@ -27,18 +24,23 @@ open class GameAssetManager : AssetManager() {
                 type.assets.forEach { asset ->
                     if (asset.getParameters() != null) {
                         load(
-                            asset.getPath(),
+                            asset.getPaths().first(),
                             BitmapFont::class.java,
                             (asset.getParameters() as FreetypeFontLoader.FreeTypeFontLoaderParameter)
                         )
                     } else {
-                        load(asset.getPath(), asset.getClazz())
+                        asset.getPaths().forEach { load(it, asset.getClazz()) }
                     }
                 }
             } else {
                 type.assets.forEach { asset ->
-                    val path = asset.getPath()
-                    addAsset(path, String::class.java, Gdx.files.internal(path).readString())
+                    asset.getPaths().forEach {
+                        addAsset(
+                            it,
+                            String::class.java,
+                            Gdx.files.internal(it).readString()
+                        )
+                    }
                 }
             }
         }
@@ -51,24 +53,8 @@ open class GameAssetManager : AssetManager() {
         setLoader(BitmapFont::class.java, "ttf", loader)
     }
 
-    fun getShader(shader: ShaderDefinitions): String? {
-        return get(shader.getPath(), String::class.java)
-    }
-
-    fun getTexture(definition: TexturesDefinitions): Texture {
-        return get(definition.getPath(), Texture::class.java)
-    }
-
-    fun getFont(font: FontsDefinitions): BitmapFont {
-        return get(font.getPath(), BitmapFont::class.java)
-    }
-
-    fun getModel(modelDefinition: ModelsDefinitions): Model {
-        return get(modelDefinition.getPath(), Model::class.java)
-    }
-
-    fun getSound(sound: SfxDefinitions): Sound {
-        return get(sound.getPath(), Sound::class.java)
+    inline fun <reified T> getAssetByDefinition(definition: AssetDefinition<T>): T {
+        return get(definition.getPaths().random(), T::class.java)
     }
 
 }

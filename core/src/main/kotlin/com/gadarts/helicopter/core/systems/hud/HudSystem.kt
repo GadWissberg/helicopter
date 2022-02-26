@@ -12,6 +12,7 @@ import com.badlogic.gdx.utils.Align
 import com.gadarts.helicopter.core.DefaultGameSettings
 import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.assets.TexturesDefinitions
+import com.gadarts.helicopter.core.assets.TexturesDefinitions.*
 import com.gadarts.helicopter.core.systems.CommonData
 import com.gadarts.helicopter.core.systems.GameEntitySystem
 import com.gadarts.helicopter.core.systems.Notifier
@@ -61,13 +62,13 @@ class HudSystem : GameEntitySystem(), Notifier<HudSystemEventsSubscriber> {
             name != null && name.equals(CommonData.UI_TABLE_NAME)
         }) as Table
         addJoystick(ui, am)
-        addWeaponButton(am, ui, TexturesDefinitions.ICON_BULLETS, clickListener = priWeaponButtonClickListener)
+        addWeaponButton(am, ui, ICON_BULLETS, clickListener = priWeaponButtonClickListener)
         addWeaponButton(am, ui,
-            TexturesDefinitions.ICON_MISSILES, JOYSTICK_PADDING_LEFT, secWeaponButtonClickListener)
+            ICON_MISSILES, JOYSTICK_PADDING_LEFT, secWeaponButtonClickListener)
     }
 
     private fun addJoystick(ui: Table, assetsManager: GameAssetManager) {
-        val joystickTexture = assetsManager.getTexture(TexturesDefinitions.JOYSTICK)
+        val joystickTexture = assetsManager.getAssetByDefinition(JOYSTICK)
         ui.add(commonData.touchpad)
             .size(joystickTexture.width.toFloat(), joystickTexture.height.toFloat())
             .pad(0F, JOYSTICK_PADDING_LEFT, JOYSTICK_PADDING_BOTTOM, 0F)
@@ -82,9 +83,9 @@ class HudSystem : GameEntitySystem(), Notifier<HudSystemEventsSubscriber> {
         rightPadding: Float = 0F,
         clickListener: ClickListener
     ) {
-        val up = TextureRegionDrawable(assetsManager.getTexture(TexturesDefinitions.BUTTON_UP))
-        val down = TextureRegionDrawable(assetsManager.getTexture(TexturesDefinitions.BUTTON_DOWN))
-        val icon = TextureRegionDrawable(assetsManager.getTexture(iconDefinition))
+        val up = TextureRegionDrawable(assetsManager.getAssetByDefinition(BUTTON_UP))
+        val down = TextureRegionDrawable(assetsManager.getAssetByDefinition(BUTTON_DOWN))
+        val icon = TextureRegionDrawable(assetsManager.getAssetByDefinition(iconDefinition))
         val button = ImageButton(ImageButton.ImageButtonStyle(up, down, null, icon, null, null))
         ui.add(button)
         if (rightPadding != 0F) {

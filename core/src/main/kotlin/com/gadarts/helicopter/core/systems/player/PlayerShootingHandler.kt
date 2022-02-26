@@ -16,8 +16,8 @@ class PlayerShootingHandler {
     private var secShooting: Boolean = false
 
     fun initialize(am: GameAssetManager) {
-        priBulletsPool = BulletsPool(am.getModel(ModelsDefinitions.BULLET))
-        secBulletsPool = BulletsPool(am.getModel(ModelsDefinitions.MISSILE))
+        priBulletsPool = BulletsPool(am.getAssetByDefinition(ModelsDefinitions.BULLET))
+        secBulletsPool = BulletsPool(am.getAssetByDefinition(ModelsDefinitions.MISSILE))
 
     }
 
