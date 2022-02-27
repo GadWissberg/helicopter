@@ -113,7 +113,7 @@ class EntityBuilder private constructor() {
         return instance
     }
 
-    fun addAmbComponent(scale: Vector3, rotation: Vector3): EntityBuilder {
+    fun addAmbComponent(scale: Vector3, rotation: Float): EntityBuilder {
         val ambComponent = engine.createComponent(AmbComponent::class.java)
         ambComponent.init(scale, rotation)
         entity!!.add(ambComponent)

@@ -3,13 +3,8 @@ package com.gadarts.helicopter.core.systems.player
 import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.PooledEngine
-import com.badlogic.gdx.graphics.GL20
-import com.badlogic.gdx.graphics.VertexAttributes.Usage.*
 import com.badlogic.gdx.graphics.g2d.TextureRegion
-import com.badlogic.gdx.graphics.g3d.Material
 import com.badlogic.gdx.graphics.g3d.Model
-import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute
-import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.createDiffuse
 import com.badlogic.gdx.graphics.g3d.decals.Decal.newDecal
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.Vector3
@@ -20,6 +15,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.utils.TimeUtils
 import com.gadarts.helicopter.core.DefaultGameSettings
 import com.gadarts.helicopter.core.EntityBuilder
+import com.gadarts.helicopter.core.GeneralUtils
 import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.assets.ModelsDefinitions
 import com.gadarts.helicopter.core.assets.SfxDefinitions
@@ -52,46 +48,18 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
 
     override fun initialize(am: GameAssetManager) {
         playerShootingHandler.initialize(assetsManager)
-        player = addPlayer(engine as PooledEngine, assetsManager)
     }
 
     private fun createPropellerBlurredModel(assetsManager: GameAssetManager) {
         val builder = ModelBuilder()
         builder.begin()
-        val material = createFlatMaterial(assetsManager, PROPELLER_BLURRED)
-        createFlatMesh(builder, material, "propeller_blurred")
+        GeneralUtils.createFlatMesh(
+            builder,
+            "propeller_blurred",
+            1F,
+            assetsManager.getAssetByDefinition(PROPELLER_BLURRED)
+        )
         propellerBlurredModel = builder.end()
-    }
-
-    private fun createFlatMesh(
-        builder: ModelBuilder,
-        material: Material,
-        meshName: String
-    ) {
-        val mbp = builder.part(
-            meshName,
-            GL20.GL_TRIANGLES,
-            (Position or Normal or TextureCoordinates).toLong(),
-            material
-        )
-        mbp.setUVRange(0F, 0F, 1F, 1F)
-        mbp.rect(
-            -1F, 0F, 1F,
-            1F, 0F, 1F,
-            1F, 0F, -1F,
-            -1F, 0F, -1F,
-            0F, 1F, 0F,
-        )
-    }
-
-    private fun createFlatMaterial(
-        assetsManager: GameAssetManager,
-        textureDefinition: TexturesDefinitions
-    ): Material {
-        val material =
-            Material(createDiffuse(assetsManager.getAssetByDefinition(textureDefinition)))
-        material.set(BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA))
-        return material
     }
 
     override fun dispose() {
@@ -131,6 +99,8 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
                 super.touchUp(event, x, y, pointer, button)
             }
         })
+        player = addPlayer(engine as PooledEngine, assetsManager)
+        commonData.player = player
     }
 
 

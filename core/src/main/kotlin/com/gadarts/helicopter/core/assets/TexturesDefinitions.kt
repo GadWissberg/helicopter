@@ -16,7 +16,8 @@ enum class TexturesDefinitions(ninepatch: Boolean = false) : AssetDefinition<Tex
     PROPELLER_BLURRED,
     SPARK_0,
     SPARK_1,
-    SPARK_2;
+    SPARK_2,
+    SAND;
 
     private val paths = ArrayList<String>()
 

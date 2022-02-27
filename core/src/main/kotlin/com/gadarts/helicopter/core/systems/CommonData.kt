@@ -1,5 +1,6 @@
 package com.gadarts.helicopter.core.systems
 
+import com.badlogic.ashley.core.Entity
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.PerspectiveCamera
 import com.badlogic.gdx.scenes.scene2d.Stage
@@ -10,6 +11,7 @@ import com.gadarts.helicopter.core.assets.TexturesDefinitions.JOYSTICK
 import com.gadarts.helicopter.core.assets.TexturesDefinitions.JOYSTICK_CENTER
 
 class CommonData(assetsManager: GameAssetManager) {
+    lateinit var player: Entity
     var touchpad: Touchpad
     val camera: PerspectiveCamera = PerspectiveCamera(
         FOV,

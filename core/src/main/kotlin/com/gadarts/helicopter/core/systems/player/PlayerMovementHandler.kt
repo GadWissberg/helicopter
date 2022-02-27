@@ -168,9 +168,9 @@ class PlayerMovementHandler {
         private val auxVector3_1 = Vector3()
         private val auxQuat = Quaternion()
         private const val ROT_EPSILON = 0.5F
-        private const val MAX_SPEED = 6F
-        private const val ACCELERATION = 0.02F
-        private const val DECELERATION = 0.03F
+        private const val MAX_SPEED = 12F
+        private const val ACCELERATION = 0.03F
+        private const val DECELERATION = 0.04F
         private const val IDLE_Z_TILT_DEGREES = 12F
         private const val STRAFE_PRESS_INTERVAL = 500
 

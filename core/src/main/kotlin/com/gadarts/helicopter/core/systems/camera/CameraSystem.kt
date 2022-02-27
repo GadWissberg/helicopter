@@ -15,7 +15,6 @@ class CameraSystem : GameEntitySystem() {
 
     private var cameraStrafeMode = Vector3().setZero()
     private var cameraTarget = Vector3()
-    private var player: Entity? = null
 
     override fun update(deltaTime: Float) {
         super.update(deltaTime)
@@ -24,15 +23,14 @@ class CameraSystem : GameEntitySystem() {
     }
 
     private fun followPlayer() {
-        if (player != null) {
-            val transform = ComponentsMapper.modelInstance.get(player).modelInstance.transform
-            val playerPosition = transform.getTranslation(auxVector3_1)
-            val playerComp = ComponentsMapper.player.get(player)
-            if (playerComp.strafing == null) {
-                followPlayerRegularMovement(playerComp, playerPosition)
-            } else {
-                followPlayerWhenStrafing(playerPosition)
-            }
+        val player = commonData.player
+        val transform = ComponentsMapper.modelInstance.get(player).modelInstance.transform
+        val playerPosition = transform.getTranslation(auxVector3_1)
+        val playerComp = ComponentsMapper.player.get(player)
+        if (playerComp.strafing == null) {
+            followPlayerRegularMovement(playerComp, playerPosition)
+        } else {
+            followPlayerWhenStrafing(playerPosition)
         }
     }
 
@@ -63,7 +61,7 @@ class CameraSystem : GameEntitySystem() {
     }
 
     override fun initialize(am: GameAssetManager) {
-        player = engine.getEntitiesFor(Family.all(PlayerComponent::class.java).get()).first()
+        initializeCamera()
     }
 
     override fun dispose() {
@@ -71,7 +69,6 @@ class CameraSystem : GameEntitySystem() {
 
     override fun addedToEngine(engine: Engine?) {
         super.addedToEngine(engine)
-        initializeCamera()
     }
 
     private fun initializeCamera() {
@@ -80,12 +77,14 @@ class CameraSystem : GameEntitySystem() {
         commonData.camera.update()
         commonData.camera.position.set(0F, INITIAL_Y, INITIAL_Z)
         commonData.camera.rotate(Vector3.X, -45F)
+        val get = ComponentsMapper.modelInstance.get(commonData.player)
+        commonData.camera.lookAt(get.modelInstance.transform.getTranslation(auxVector3_1))
     }
 
     companion object {
         const val NEAR = 0.1F
         const val FAR = 300F
-        const val INITIAL_Y = 5F
+        const val INITIAL_Y = 6F
         const val INITIAL_Z = 5F
         val auxVector2 = Vector2()
         val auxVector3_1 = Vector3()
