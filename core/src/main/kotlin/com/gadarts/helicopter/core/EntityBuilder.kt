@@ -12,7 +12,10 @@ import com.gadarts.helicopter.core.components.child.ChildDecalComponent
 import com.gadarts.helicopter.core.components.child.ChildDecal
 
 class EntityBuilder private constructor() {
-    fun addModelInstanceComponent(model: Model, position: Vector3): EntityBuilder {
+    fun addModelInstanceComponent(
+        model: Model,
+        position: Vector3,
+    ): EntityBuilder {
         val modelInstanceComponent = engine.createComponent(ModelInstanceComponent::class.java)
         modelInstanceComponent.init(model, position)
         entity!!.add(modelInstanceComponent)
@@ -110,8 +113,14 @@ class EntityBuilder private constructor() {
         return instance
     }
 
-    companion object {
+    fun addAmbComponent(scale: Vector3, rotation: Vector3): EntityBuilder {
+        val ambComponent = engine.createComponent(AmbComponent::class.java)
+        ambComponent.init(scale, rotation)
+        entity!!.add(ambComponent)
+        return instance
+    }
 
+    companion object {
         private lateinit var instance: EntityBuilder
         var entity: Entity? = null
         lateinit var engine: PooledEngine

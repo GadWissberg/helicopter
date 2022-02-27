@@ -16,7 +16,7 @@ class ModelInstanceComponent : GameComponent() {
 
     private fun initialize(
         modelInstance1: ModelInstance,
-        position: Vector3
+        position: Vector3,
     ) {
         this.modelInstance = modelInstance1
         this.modelInstance.transform.translate(position)
