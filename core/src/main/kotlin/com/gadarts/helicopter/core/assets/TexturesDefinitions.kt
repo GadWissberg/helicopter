@@ -15,7 +15,7 @@ enum class TexturesDefinitions(fileNames: Int = 1, ninepatch: Boolean = false) :
     PROPELLER_BLURRED,
     SPARK(3),
     SAND,
-    SAND_DEC(3);
+    SAND_DEC(4);
 
     private val paths = ArrayList<String>()
 

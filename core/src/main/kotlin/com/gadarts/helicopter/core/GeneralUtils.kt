@@ -40,7 +40,7 @@ object GeneralUtils {
             (Position or Normal or TextureCoordinates).toLong(),
             material
         )
-        mbp.setUVRange(0F, 0F, size, size)
+        mbp.setUVRange(0F, 0F, 1F, 1F)
         mbp.rect(
             offset + -size, 0F, offset + size,
             offset + size, 0F, offset + size,

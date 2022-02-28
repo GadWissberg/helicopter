@@ -3,11 +3,15 @@ package com.gadarts.helicopter.core.systems
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.utils.ImmutableArray
+import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.graphics.g3d.Model
+import com.badlogic.gdx.graphics.g3d.ModelInstance
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Vector3
 import com.gadarts.helicopter.core.EntityBuilder
+import com.gadarts.helicopter.core.GameMap
 import com.gadarts.helicopter.core.GeneralUtils
 import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.assets.ModelsDefinitions.PALM_TREE
@@ -16,8 +20,8 @@ import com.gadarts.helicopter.core.components.AmbComponent
 import com.gadarts.helicopter.core.components.ComponentsMapper
 
 class MapSystem : GameEntitySystem() {
+    private val floors: Array<Array<Entity?>> = Array(MAP_SIZE) { arrayOfNulls(MAP_SIZE) }
     private lateinit var ambEntities: ImmutableArray<Entity>
-    private lateinit var floors: Array<IntArray>
     private lateinit var floorModel: Model
 
     override fun initialize(am: GameAssetManager) {
@@ -28,19 +32,31 @@ class MapSystem : GameEntitySystem() {
         val texture = assetsManager.getAssetByDefinition(TexturesDefinitions.SAND)
         GeneralUtils.createFlatMesh(builder, "floor", 0.5F, texture, 0.5F)
         floorModel = builder.end()
-        addGround()
+        addGround(am)
     }
 
-    private fun addGround() {
-        floors = Array(MAP_SIZE) { IntArray(MAP_SIZE) }
-        for (row in 0..MAP_SIZE) {
-            for (col in 0..MAP_SIZE) {
-                EntityBuilder.begin().addModelInstanceComponent(
-                    floorModel,
+    private fun addGround(am: GameAssetManager) {
+        val map = am.getAll(GameMap::class.java, com.badlogic.gdx.utils.Array())[0]
+        for (row in 0 until MAP_SIZE) {
+            for (col in 0 until MAP_SIZE) {
+                val modelInstance = ModelInstance(floorModel)
+//                if (map.tilesMapping[row][col] != GameMap.TILE_TYPE_EMPTY) {
+//
+//                }
+                if (MathUtils.random() > 0.9) {
+                    val sandDecTexture = am.getAssetByDefinition(TexturesDefinitions.SAND_DEC)
+                    (modelInstance.materials.first()
+                        .get(TextureAttribute.Diffuse) as TextureAttribute).set(
+                        TextureRegion(sandDecTexture)
+                    )
+                }
+                floors[row][col] = EntityBuilder.begin().addModelInstanceComponent(
+                    modelInstance,
                     auxVector1.set(col.toFloat(), 0F, row.toFloat())
                 ).finishAndAddToEngine()
             }
         }
+
     }
 
     private fun applyTransformOnAmbEntities() {
@@ -76,6 +92,6 @@ class MapSystem : GameEntitySystem() {
         private val auxVector1 = Vector3()
         private const val MIN_SCALE = 0.95F
         private const val MAX_SCALE = 1.05F
-        private const val MAP_SIZE = 20
+        const val MAP_SIZE = 20
     }
 }

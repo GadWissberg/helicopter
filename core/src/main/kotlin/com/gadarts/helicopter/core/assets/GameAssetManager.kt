@@ -9,6 +9,8 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGeneratorLoader
 import com.badlogic.gdx.graphics.g2d.freetype.FreetypeFontLoader
 import com.gadarts.helicopter.core.GameMap
+import java.io.File.*
+import java.util.*
 
 /**
  * Responsible to load the assets.
@@ -22,15 +24,26 @@ open class GameAssetManager : AssetManager() {
         initializeCustomLoaders()
         AssetsTypes.values().forEach { type ->
             if (type.isLoadedUsingLoader()) {
-                type.assets.forEach { asset ->
-                    if (asset.getParameters() != null) {
+                if (type.assets.isNotEmpty()) {
+                    type.assets.forEach { asset ->
+                        if (asset.getParameters() != null) {
+                            load(
+                                asset.getPaths().first(),
+                                BitmapFont::class.java,
+                                (asset.getParameters() as FreetypeFontLoader.FreeTypeFontLoaderParameter)
+                            )
+                        } else {
+                            asset.getPaths().forEach { load(it, asset.getClazz()) }
+                        }
+                    }
+                } else {
+                    val toLowerCase = type.name.toLowerCase(Locale.ROOT)
+                    val dir = Gdx.files.internal(toLowerCase)
+                    dir.list().forEach {
                         load(
-                            asset.getPaths().first(),
-                            BitmapFont::class.java,
-                            (asset.getParameters() as FreetypeFontLoader.FreeTypeFontLoaderParameter)
+                            "$toLowerCase$separatorChar${it.name()}",
+                            GameMap::class.java
                         )
-                    } else {
-                        asset.getPaths().forEach { load(it, asset.getClazz()) }
                     }
                 }
             } else {
@@ -63,5 +76,4 @@ open class GameAssetManager : AssetManager() {
     inline fun <reified T> getAssetByDefinitionAndIndex(definition: AssetDefinition<T>, i: Int): T {
         return get(definition.getPaths()[i], T::class.java)
     }
-
 }

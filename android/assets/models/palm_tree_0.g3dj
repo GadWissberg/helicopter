@@ -4411,7 +4411,7 @@
 			"textures": [
 				{
 					"id": "Texture.002", 
-					"filename": "palm_tree_3.png", 
+					"filename": "palm_tree_0.png",
 					"type": "DIFFUSE"
 				}
 			]

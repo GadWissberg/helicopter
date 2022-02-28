@@ -14,7 +14,7 @@ interface AssetDefinition<T> {
         if (fileNames == 1) {
             paths.add(pathFormat.format(definitionName.toLowerCase(Locale.ROOT)))
         } else {
-            for (i in 1..fileNames) {
+            for (i in 0 until fileNames) {
                 paths.add(pathFormat.format(definitionName.toLowerCase(Locale.ROOT) + "_" + i))
             }
         }
