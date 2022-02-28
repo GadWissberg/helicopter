@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.graphics.g3d.Model
 import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.*
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Vector3
@@ -39,24 +40,35 @@ class MapSystem : GameEntitySystem() {
         val map = am.getAll(GameMap::class.java, com.badlogic.gdx.utils.Array())[0]
         for (row in 0 until MAP_SIZE) {
             for (col in 0 until MAP_SIZE) {
-                val modelInstance = ModelInstance(floorModel)
-//                if (map.tilesMapping[row][col] != GameMap.TILE_TYPE_EMPTY) {
-//
-//                }
-                if (MathUtils.random() > 0.9) {
-                    val sandDecTexture = am.getAssetByDefinition(TexturesDefinitions.SAND_DEC)
-                    (modelInstance.materials.first()
-                        .get(TextureAttribute.Diffuse) as TextureAttribute).set(
-                        TextureRegion(sandDecTexture)
-                    )
-                }
-                floors[row][col] = EntityBuilder.begin().addModelInstanceComponent(
-                    modelInstance,
-                    auxVector1.set(col.toFloat(), 0F, row.toFloat())
-                ).finishAndAddToEngine()
+                addGroundTile(am, row, col)
             }
         }
 
+    }
+
+    private fun addGroundTile(
+        am: GameAssetManager,
+        row: Int,
+        col: Int
+    ) {
+        val modelInstance = ModelInstance(floorModel)
+        //                if (map.tilesMapping[row][col] != GameMap.TILE_TYPE_EMPTY) {
+        //
+        //                }
+        if (MathUtils.random() > CHANCE_SAND_DEC) {
+            val sandDecTexture = am.getAssetByDefinition(TexturesDefinitions.SAND_DEC)
+            val attr = modelInstance.materials.first().get(Diffuse) as TextureAttribute
+            val textureRegion = TextureRegion(sandDecTexture)
+            attr.set(textureRegion)
+//            modelInstance.transform.rotate(
+//                auxVector1.set(0.5F, 1F, -0.5F),
+//                MathUtils.random(4) * 90F
+//            )
+        }
+        floors[row][col] = EntityBuilder.begin().addModelInstanceComponent(
+            modelInstance,
+            auxVector1.set(col.toFloat(), 0F, row.toFloat())
+        ).finishAndAddToEngine()
     }
 
     private fun applyTransformOnAmbEntities() {
@@ -92,6 +104,7 @@ class MapSystem : GameEntitySystem() {
         private val auxVector1 = Vector3()
         private const val MIN_SCALE = 0.95F
         private const val MAX_SCALE = 1.05F
+        private const val CHANCE_SAND_DEC = 0.95F
         const val MAP_SIZE = 20
     }
 }
