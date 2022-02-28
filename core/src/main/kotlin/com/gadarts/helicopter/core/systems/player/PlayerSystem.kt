@@ -21,7 +21,6 @@ import com.gadarts.helicopter.core.assets.ModelsDefinitions
 import com.gadarts.helicopter.core.assets.SfxDefinitions
 import com.gadarts.helicopter.core.assets.TexturesDefinitions
 import com.gadarts.helicopter.core.assets.TexturesDefinitions.PROPELLER_BLURRED
-import com.gadarts.helicopter.core.assets.TexturesDefinitions.SPARK_0
 import com.gadarts.helicopter.core.components.ArmComponent
 import com.gadarts.helicopter.core.components.ArmProperties
 import com.gadarts.helicopter.core.components.ComponentsMapper
@@ -126,9 +125,9 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
         if (DefaultGameSettings.DISPLAY_PROPELLER) {
             addPropeller(am, entityBuilder)
         }
-        val spark0 = TextureRegion(am.getAssetByDefinition(SPARK_0))
-        val spark1 = TextureRegion(am.getAssetByDefinition(TexturesDefinitions.SPARK_1))
-        val spark2 = TextureRegion(am.getAssetByDefinition(TexturesDefinitions.SPARK_2))
+        val spark0 = TextureRegion(am.getAssetByDefinitionAndIndex(TexturesDefinitions.SPARK, 0))
+        val spark1 = TextureRegion(am.getAssetByDefinitionAndIndex(TexturesDefinitions.SPARK, 1))
+        val spark2 = TextureRegion(am.getAssetByDefinitionAndIndex(TexturesDefinitions.SPARK, 2))
         val sparkFrames = listOf(spark0, spark1, spark2)
         val priSnd = am.getAssetByDefinition(SfxDefinitions.MACHINE_GUN)
         val secSnd = am.getAssetByDefinition(SfxDefinitions.MISSILE)

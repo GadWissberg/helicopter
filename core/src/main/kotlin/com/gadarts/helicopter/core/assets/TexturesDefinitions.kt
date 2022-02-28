@@ -2,10 +2,9 @@ package com.gadarts.helicopter.core.assets
 
 import com.badlogic.gdx.assets.AssetLoaderParameters
 import com.badlogic.gdx.graphics.Texture
-import java.util.ArrayList
-import java.util.Locale.ROOT
 
-enum class TexturesDefinitions(ninepatch: Boolean = false) : AssetDefinition<Texture> {
+enum class TexturesDefinitions(fileNames: Int = 1, ninepatch: Boolean = false) :
+    AssetDefinition<Texture> {
 
     JOYSTICK,
     JOYSTICK_CENTER,
@@ -14,17 +13,14 @@ enum class TexturesDefinitions(ninepatch: Boolean = false) : AssetDefinition<Tex
     ICON_BULLETS,
     ICON_MISSILES,
     PROPELLER_BLURRED,
-    SPARK_0,
-    SPARK_1,
-    SPARK_2,
-    SAND;
+    SPARK(3),
+    SAND,
+    SAND_DEC(3);
 
     private val paths = ArrayList<String>()
 
     init {
-        initializePaths(
-            "textures/${(if (ninepatch) "%s.9" else "%s")}.png"
-        )
+        initializePaths("textures/${(if (ninepatch) "%s.9" else "%s")}.png", fileNames)
     }
 
     override fun getPaths(): ArrayList<String> {

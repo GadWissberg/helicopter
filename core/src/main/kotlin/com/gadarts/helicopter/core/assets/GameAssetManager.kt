@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGeneratorLoader
 import com.badlogic.gdx.graphics.g2d.freetype.FreetypeFontLoader
+import com.gadarts.helicopter.core.GameMap
 
 /**
  * Responsible to load the assets.
@@ -18,7 +19,7 @@ open class GameAssetManager : AssetManager() {
      * Loads all assets sync.
      */
     fun loadAssets() {
-        initializeFontLoaders()
+        initializeCustomLoaders()
         AssetsTypes.values().forEach { type ->
             if (type.isLoadedUsingLoader()) {
                 type.assets.forEach { asset ->
@@ -46,15 +47,21 @@ open class GameAssetManager : AssetManager() {
         }
     }
 
-    private fun initializeFontLoaders() {
+    private fun initializeCustomLoaders() {
         val resolver: FileHandleResolver = InternalFileHandleResolver()
         setLoader(FreeTypeFontGenerator::class.java, FreeTypeFontGeneratorLoader(resolver))
         val loader = FreetypeFontLoader(resolver)
         setLoader(BitmapFont::class.java, "ttf", loader)
+        val mapLoader = MapLoader(resolver)
+        setLoader(GameMap::class.java, "json", mapLoader)
     }
 
     inline fun <reified T> getAssetByDefinition(definition: AssetDefinition<T>): T {
         return get(definition.getPaths().random(), T::class.java)
+    }
+
+    inline fun <reified T> getAssetByDefinitionAndIndex(definition: AssetDefinition<T>, i: Int): T {
+        return get(definition.getPaths()[i], T::class.java)
     }
 
 }
