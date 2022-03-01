@@ -31,7 +31,7 @@ class MapSystem : GameEntitySystem() {
         val builder = ModelBuilder()
         builder.begin()
         val texture = assetsManager.getAssetByDefinition(TexturesDefinitions.SAND)
-        GeneralUtils.createFlatMesh(builder, "floor", 0.5F, texture, 0.5F)
+        GeneralUtils.createFlatMesh(builder, "floor", 0.5F, texture, 0F)
         floorModel = builder.end()
         addGround(am)
     }
@@ -55,20 +55,27 @@ class MapSystem : GameEntitySystem() {
         //                if (map.tilesMapping[row][col] != GameMap.TILE_TYPE_EMPTY) {
         //
         //                }
+        floors[row][col] = EntityBuilder.begin().addModelInstanceComponent(
+            modelInstance,
+            auxVector1.set(col.toFloat() + 0.5F, 0F, row.toFloat() + 0.5F)
+        ).finishAndAddToEngine()
+        randomizeSand(am, modelInstance)
+    }
+
+    private fun randomizeSand(
+        am: GameAssetManager,
+        modelInstance: ModelInstance
+    ) {
         if (MathUtils.random() > CHANCE_SAND_DEC) {
             val sandDecTexture = am.getAssetByDefinition(TexturesDefinitions.SAND_DEC)
             val attr = modelInstance.materials.first().get(Diffuse) as TextureAttribute
             val textureRegion = TextureRegion(sandDecTexture)
             attr.set(textureRegion)
-//            modelInstance.transform.rotate(
-//                auxVector1.set(0.5F, 1F, -0.5F),
-//                MathUtils.random(4) * 90F
-//            )
+            modelInstance.transform.rotate(
+                Vector3.Y,
+                MathUtils.random(4) * 90F
+            )
         }
-        floors[row][col] = EntityBuilder.begin().addModelInstanceComponent(
-            modelInstance,
-            auxVector1.set(col.toFloat(), 0F, row.toFloat())
-        ).finishAndAddToEngine()
     }
 
     private fun applyTransformOnAmbEntities() {
