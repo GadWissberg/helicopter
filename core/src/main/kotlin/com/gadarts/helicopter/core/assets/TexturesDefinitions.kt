@@ -15,7 +15,22 @@ enum class TexturesDefinitions(fileNames: Int = 1, ninepatch: Boolean = false) :
     PROPELLER_BLURRED,
     SPARK(3),
     SAND,
-    SAND_DEC(4);
+    SAND_DEC(4),
+    VERTICAL,
+    HORIZONTAL,
+    CROSS,
+    HORIZONTAL_BOTTOM,
+    HORIZONTAL_TOP,
+    VERTICAL_LEFT,
+    VERTICAL_RIGHT,
+    LEFT_TO_BOTTOM,
+    RIGHT_TO_BOTTOM,
+    LEFT_TO_TOP,
+    RIGHT_TO_TOP,
+    RIGHT_END,
+    LEFT_END,
+    TOP_END,
+    BOTTOM_END;
 
     private val paths = ArrayList<String>()
 

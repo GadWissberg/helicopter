@@ -21,55 +21,10 @@ import com.gadarts.helicopter.core.components.AmbComponent
 import com.gadarts.helicopter.core.components.ComponentsMapper
 
 class MapSystem : GameEntitySystem() {
+
     private val floors: Array<Array<Entity?>> = Array(MAP_SIZE) { arrayOfNulls(MAP_SIZE) }
     private lateinit var ambEntities: ImmutableArray<Entity>
     private lateinit var floorModel: Model
-
-    /**
-     * 0,1,0
-     * 1,1,0
-     * 0,1,0
-     */
-    enum class RoadTiles(texturesDefinitions: TexturesDefinitions, val signature: Int) {
-        VERTICAL(TexturesDefinitions.SAND_DEC, 0B000111000),
-        HORIZONTAL(TexturesDefinitions.SAND_DEC, 0B010010010),
-        LEFT_TO_BOTTOM(TexturesDefinitions.SAND_DEC, 0B000110010),
-        RIGHT_TO_BOTTOM(TexturesDefinitions.SAND_DEC, 0B000011010),
-        LEFT_TO_TOP(TexturesDefinitions.SAND_DEC, 0B010110000),
-        RIGHT_TO_TOP(TexturesDefinitions.SAND_DEC, 0B010011000),
-        RIGHT_END(TexturesDefinitions.SAND_DEC, 0B000110000),
-        BOTTOM_END(TexturesDefinitions.SAND_DEC, 0B010010000),
-        LEFT_END(TexturesDefinitions.SAND_DEC, 0B000011000),
-        TOP_END(TexturesDefinitions.SAND_DEC, 0B000010010),
-        CROSS(TexturesDefinitions.SAND_DEC, 0B010111010),
-        HORIZONTAL_BOTTOM(TexturesDefinitions.SAND_DEC, 0B000111010),
-        HORIZONTAL_TOP(TexturesDefinitions.SAND_DEC, 0B010111000),
-        VERTICAL_RIGHT(TexturesDefinitions.SAND_DEC, 0B010011010),
-        VERTICAL_LEFT(TexturesDefinitions.SAND_DEC, 0B010110010);
-
-        companion object {
-            fun getRoadTileByNeighbors(
-                right: Boolean,
-                bottom: Boolean,
-                left: Boolean,
-                top: Boolean
-            ): RoadTiles? {
-                val signature = Integer.parseInt(
-                    "0${if (top) "1" else "0"}0"
-                            + "${if (left) "1" else "0"}1${if (right) "1" else "0"}"
-                            + "0${if (bottom) "1" else "0"}0"
-                )
-                val values = values()
-                for (element in values) {
-                    if (element.signature == signature) {
-                        return element
-                    }
-                }
-                return null
-            }
-        }
-    }
-
     override fun initialize(am: GameAssetManager) {
         addTrees(am)
         applyTransformOnAmbEntities()
@@ -121,9 +76,9 @@ class MapSystem : GameEntitySystem() {
                 row < MAP_SIZE - 1 && map.tilesMapping[row + 1][col] != GameMap.TILE_TYPE_EMPTY
             val left = col > 0 && map.tilesMapping[row][col - 1] != GameMap.TILE_TYPE_EMPTY
             val top = row > 0 && map.tilesMapping[row - 1][col] != GameMap.TILE_TYPE_EMPTY
-            RoadTiles.getRoadTileByNeighbors(right, bottom, left, top)
             val textureAttribute = modelInstance.materials.get(0).get(Diffuse) as TextureAttribute
-            textureAttribute.set(TextureRegion(am.getAssetByDefinition(TexturesDefinitions.SAND_DEC)))
+            val def = RoadTiles.getRoadTileByNeighbors(right, bottom, left, top)!!.textureDefinition
+            textureAttribute.set(TextureRegion(am.getAssetByDefinition(def)))
         }
     }
 
@@ -170,6 +125,51 @@ class MapSystem : GameEntitySystem() {
 
     override fun dispose() {
         floorModel.dispose()
+    }
+
+    /**
+     * 0,0,0
+     * 0,1,0
+     * 0,1,0
+     */
+    enum class RoadTiles(val textureDefinition: TexturesDefinitions, val signature: Int) {
+        VERTICAL(TexturesDefinitions.VERTICAL, 0B010010010),
+        HORIZONTAL(TexturesDefinitions.HORIZONTAL, 0B000111000),
+        LEFT_TO_BOTTOM(TexturesDefinitions.LEFT_TO_BOTTOM, 0B000110010),
+        RIGHT_TO_BOTTOM(TexturesDefinitions.RIGHT_TO_BOTTOM, 0B000011010),
+        LEFT_TO_TOP(TexturesDefinitions.LEFT_TO_TOP, 0B010110000),
+        RIGHT_TO_TOP(TexturesDefinitions.RIGHT_TO_TOP, 0B010011000),
+        RIGHT_END(TexturesDefinitions.RIGHT_END, 0B000011000),
+        BOTTOM_END(TexturesDefinitions.BOTTOM_END, 0B000010010),
+        LEFT_END(TexturesDefinitions.LEFT_END, 0B000110000),
+        TOP_END(TexturesDefinitions.TOP_END, 0B010010000),
+        CROSS(TexturesDefinitions.CROSS, 0B010111010),
+        HORIZONTAL_BOTTOM(TexturesDefinitions.HORIZONTAL_BOTTOM, 0B000111010),
+        HORIZONTAL_TOP(TexturesDefinitions.HORIZONTAL_TOP, 0B010111000),
+        VERTICAL_RIGHT(TexturesDefinitions.VERTICAL_RIGHT, 0B010011010),
+        VERTICAL_LEFT(TexturesDefinitions.VERTICAL_LEFT, 0B010110010);
+
+        companion object {
+            fun getRoadTileByNeighbors(
+                right: Boolean,
+                bottom: Boolean,
+                left: Boolean,
+                top: Boolean
+            ): RoadTiles? {
+                val signature = Integer.parseInt(
+                    "0${if (top) "1" else "0"}0"
+                            + "${if (left) "1" else "0"}1${if (right) "1" else "0"}"
+                            + "0${if (bottom) "1" else "0"}0"
+                ,2)
+                val values = values()
+                for (element in values) {
+                    if (element.signature == signature) {
+                        return element
+                    }
+                }
+                return null
+            }
+        }
     }
 
     companion object {
