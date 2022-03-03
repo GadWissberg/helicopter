@@ -25,6 +25,51 @@ class MapSystem : GameEntitySystem() {
     private lateinit var ambEntities: ImmutableArray<Entity>
     private lateinit var floorModel: Model
 
+    /**
+     * 0,1,0
+     * 1,1,0
+     * 0,1,0
+     */
+    enum class RoadTiles(texturesDefinitions: TexturesDefinitions, val signature: Int) {
+        VERTICAL(TexturesDefinitions.SAND_DEC, 0B000111000),
+        HORIZONTAL(TexturesDefinitions.SAND_DEC, 0B010010010),
+        LEFT_TO_BOTTOM(TexturesDefinitions.SAND_DEC, 0B000110010),
+        RIGHT_TO_BOTTOM(TexturesDefinitions.SAND_DEC, 0B000011010),
+        LEFT_TO_TOP(TexturesDefinitions.SAND_DEC, 0B010110000),
+        RIGHT_TO_TOP(TexturesDefinitions.SAND_DEC, 0B010011000),
+        RIGHT_END(TexturesDefinitions.SAND_DEC, 0B000110000),
+        BOTTOM_END(TexturesDefinitions.SAND_DEC, 0B010010000),
+        LEFT_END(TexturesDefinitions.SAND_DEC, 0B000011000),
+        TOP_END(TexturesDefinitions.SAND_DEC, 0B000010010),
+        CROSS(TexturesDefinitions.SAND_DEC, 0B010111010),
+        HORIZONTAL_BOTTOM(TexturesDefinitions.SAND_DEC, 0B000111010),
+        HORIZONTAL_TOP(TexturesDefinitions.SAND_DEC, 0B010111000),
+        VERTICAL_RIGHT(TexturesDefinitions.SAND_DEC, 0B010011010),
+        VERTICAL_LEFT(TexturesDefinitions.SAND_DEC, 0B010110010);
+
+        companion object {
+            fun getRoadTileByNeighbors(
+                right: Boolean,
+                bottom: Boolean,
+                left: Boolean,
+                top: Boolean
+            ): RoadTiles? {
+                val signature = Integer.parseInt(
+                    "0${if (top) "1" else "0"}0"
+                            + "${if (left) "1" else "0"}1${if (right) "1" else "0"}"
+                            + "0${if (bottom) "1" else "0"}0"
+                )
+                val values = values()
+                for (element in values) {
+                    if (element.signature == signature) {
+                        return element
+                    }
+                }
+                return null
+            }
+        }
+    }
+
     override fun initialize(am: GameAssetManager) {
         addTrees(am)
         applyTransformOnAmbEntities()
@@ -40,7 +85,7 @@ class MapSystem : GameEntitySystem() {
         val map = am.getAll(GameMap::class.java, com.badlogic.gdx.utils.Array())[0]
         for (row in 0 until MAP_SIZE) {
             for (col in 0 until MAP_SIZE) {
-                addGroundTile(am, row, col)
+                addGroundTile(am, row, col, map)
             }
         }
 
@@ -49,17 +94,37 @@ class MapSystem : GameEntitySystem() {
     private fun addGroundTile(
         am: GameAssetManager,
         row: Int,
-        col: Int
+        col: Int,
+        map: GameMap
     ) {
         val modelInstance = ModelInstance(floorModel)
-        //                if (map.tilesMapping[row][col] != GameMap.TILE_TYPE_EMPTY) {
-        //
-        //                }
+        initializeRoadTile(map, row, col, modelInstance, am)
         floors[row][col] = EntityBuilder.begin().addModelInstanceComponent(
             modelInstance,
             auxVector1.set(col.toFloat() + 0.5F, 0F, row.toFloat() + 0.5F)
         ).finishAndAddToEngine()
         randomizeSand(am, modelInstance)
+    }
+
+    private fun initializeRoadTile(
+        map: GameMap,
+        row: Int,
+        col: Int,
+        modelInstance: ModelInstance,
+        am: GameAssetManager
+    ) {
+        val current = map.tilesMapping[row][col]
+        if (current != GameMap.TILE_TYPE_EMPTY) {
+            val right =
+                col < MAP_SIZE - 1 && map.tilesMapping[row][col + 1] != GameMap.TILE_TYPE_EMPTY
+            val bottom =
+                row < MAP_SIZE - 1 && map.tilesMapping[row + 1][col] != GameMap.TILE_TYPE_EMPTY
+            val left = col > 0 && map.tilesMapping[row][col - 1] != GameMap.TILE_TYPE_EMPTY
+            val top = row > 0 && map.tilesMapping[row - 1][col] != GameMap.TILE_TYPE_EMPTY
+            RoadTiles.getRoadTileByNeighbors(right, bottom, left, top)
+            val textureAttribute = modelInstance.materials.get(0).get(Diffuse) as TextureAttribute
+            textureAttribute.set(TextureRegion(am.getAssetByDefinition(TexturesDefinitions.SAND_DEC)))
+        }
     }
 
     private fun randomizeSand(
