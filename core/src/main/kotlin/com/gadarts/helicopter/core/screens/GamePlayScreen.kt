@@ -45,10 +45,10 @@ class GamePlayScreen(
     }
 
     private fun addSystems(data: CommonData) {
+        addSystem(CharacterSystem(), data)
         addSystem(PlayerSystem(), data)
         addSystem(RenderSystem(), data)
         addSystem(CameraSystem(), data)
-        addSystem(CharacterSystem(), data)
         addSystem(HudSystem(), data)
         addSystem(ProfilingSystem(), data)
         addSystem(MapSystem(), data)
