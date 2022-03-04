@@ -53,12 +53,17 @@ class MapSystem : GameEntitySystem() {
         map: GameMap
     ) {
         val modelInstance = ModelInstance(floorModel)
-        initializeRoadTile(map, row, col, modelInstance, am)
+        val current = map.tilesMapping[row][col]
         floors[row][col] = EntityBuilder.begin().addModelInstanceComponent(
             modelInstance,
             auxVector1.set(col.toFloat() + 0.5F, 0F, row.toFloat() + 0.5F)
         ).finishAndAddToEngine()
-        randomizeSand(am, modelInstance)
+        if (current != GameMap.TILE_TYPE_EMPTY) {
+            initializeRoadTile(map, row, col, modelInstance, am)
+        } else {
+            randomizeSand(am, modelInstance)
+        }
+
     }
 
     private fun initializeRoadTile(
@@ -68,18 +73,15 @@ class MapSystem : GameEntitySystem() {
         modelInstance: ModelInstance,
         am: GameAssetManager
     ) {
-        val current = map.tilesMapping[row][col]
-        if (current != GameMap.TILE_TYPE_EMPTY) {
-            val right =
-                col < MAP_SIZE - 1 && map.tilesMapping[row][col + 1] != GameMap.TILE_TYPE_EMPTY
-            val bottom =
-                row < MAP_SIZE - 1 && map.tilesMapping[row + 1][col] != GameMap.TILE_TYPE_EMPTY
-            val left = col > 0 && map.tilesMapping[row][col - 1] != GameMap.TILE_TYPE_EMPTY
-            val top = row > 0 && map.tilesMapping[row - 1][col] != GameMap.TILE_TYPE_EMPTY
-            val textureAttribute = modelInstance.materials.get(0).get(Diffuse) as TextureAttribute
-            val def = RoadTiles.getRoadTileByNeighbors(right, bottom, left, top)!!.textureDefinition
-            textureAttribute.set(TextureRegion(am.getAssetByDefinition(def)))
-        }
+        val right =
+            col < MAP_SIZE - 1 && map.tilesMapping[row][col + 1] != GameMap.TILE_TYPE_EMPTY
+        val bottom =
+            row < MAP_SIZE - 1 && map.tilesMapping[row + 1][col] != GameMap.TILE_TYPE_EMPTY
+        val left = col > 0 && map.tilesMapping[row][col - 1] != GameMap.TILE_TYPE_EMPTY
+        val top = row > 0 && map.tilesMapping[row - 1][col] != GameMap.TILE_TYPE_EMPTY
+        val textureAttribute = modelInstance.materials.get(0).get(Diffuse) as TextureAttribute
+        val def = RoadTiles.getRoadTileByNeighbors(right, bottom, left, top)!!.textureDefinition
+        textureAttribute.set(TextureRegion(am.getAssetByDefinition(def)))
     }
 
     private fun randomizeSand(
@@ -159,8 +161,8 @@ class MapSystem : GameEntitySystem() {
                 val signature = Integer.parseInt(
                     "0${if (top) "1" else "0"}0"
                             + "${if (left) "1" else "0"}1${if (right) "1" else "0"}"
-                            + "0${if (bottom) "1" else "0"}0"
-                ,2)
+                            + "0${if (bottom) "1" else "0"}0", 2
+                )
                 val values = values()
                 for (element in values) {
                     if (element.signature == signature) {
