@@ -25,6 +25,7 @@ class MapSystem : GameEntitySystem() {
     private val floors: Array<Array<Entity?>> = Array(MAP_SIZE) { arrayOfNulls(MAP_SIZE) }
     private lateinit var ambEntities: ImmutableArray<Entity>
     private lateinit var floorModel: Model
+
     override fun initialize(am: GameAssetManager) {
         addTrees(am)
         applyTransformOnAmbEntities()
@@ -33,35 +34,47 @@ class MapSystem : GameEntitySystem() {
         val texture = assetsManager.getAssetByDefinition(TexturesDefinitions.SAND)
         GeneralUtils.createFlatMesh(builder, "floor", 0.5F, texture, 0F)
         floorModel = builder.end()
-        addGround(am)
+        addGround(am, MAP_SIZE, MAP_SIZE, 0, 0)
+        addGround(am, 20, MAP_SIZE, 0, -20)
     }
 
-    private fun addGround(am: GameAssetManager) {
+    private fun addGround(am: GameAssetManager, rows: Int, cols: Int, xOffset: Int, zOffset: Int) {
         val map = am.getAll(GameMap::class.java, com.badlogic.gdx.utils.Array())[0]
-        for (row in 0 until MAP_SIZE) {
-            for (col in 0 until MAP_SIZE) {
-                addGroundTile(am, row, col, map)
+        for (row in 0 until rows) {
+            for (col in 0 until cols) {
+                addGroundTile(row, col, map, xOffset, zOffset)
             }
         }
 
     }
 
     private fun addGroundTile(
-        am: GameAssetManager,
         row: Int,
         col: Int,
-        map: GameMap
+        map: GameMap,
+        xOffset: Int,
+        zOffset: Int
     ) {
         val modelInstance = ModelInstance(floorModel)
-        val current = map.tilesMapping[row][col]
-        floors[row][col] = EntityBuilder.begin().addModelInstanceComponent(
+        val entity = EntityBuilder.begin().addModelInstanceComponent(
             modelInstance,
-            auxVector1.set(col.toFloat() + 0.5F, 0F, row.toFloat() + 0.5F)
+            auxVector1.set(xOffset + col.toFloat() + 0.5F, 0F, zOffset + row.toFloat() + 0.5F)
         ).finishAndAddToEngine()
+        var current = GameMap.TILE_TYPE_EMPTY
+        val rowWithOffset = row + xOffset
+        val colWithOffset = col + zOffset
+        if (rowWithOffset >= 0
+            && colWithOffset >= 0
+            && rowWithOffset < floors.size
+            && colWithOffset < floors[0].size
+        ) {
+            current = map.tilesMapping[rowWithOffset][colWithOffset]
+            floors[rowWithOffset][colWithOffset] = entity
+        }
         if (current != GameMap.TILE_TYPE_EMPTY) {
-            initializeRoadTile(map, row, col, modelInstance, am)
+            initializeRoadTile(map, row, col, modelInstance, assetsManager)
         } else {
-            randomizeSand(am, modelInstance)
+            randomizeSand(assetsManager, modelInstance)
         }
 
     }
@@ -73,15 +86,15 @@ class MapSystem : GameEntitySystem() {
         modelInstance: ModelInstance,
         am: GameAssetManager
     ) {
-        val right =
-            col < MAP_SIZE - 1 && map.tilesMapping[row][col + 1] != GameMap.TILE_TYPE_EMPTY
-        val bottom =
-            row < MAP_SIZE - 1 && map.tilesMapping[row + 1][col] != GameMap.TILE_TYPE_EMPTY
+        val right = col < MAP_SIZE - 1 && map.tilesMapping[row][col + 1] != GameMap.TILE_TYPE_EMPTY
+        val btm = row < MAP_SIZE - 1 && map.tilesMapping[row + 1][col] != GameMap.TILE_TYPE_EMPTY
         val left = col > 0 && map.tilesMapping[row][col - 1] != GameMap.TILE_TYPE_EMPTY
         val top = row > 0 && map.tilesMapping[row - 1][col] != GameMap.TILE_TYPE_EMPTY
         val textureAttribute = modelInstance.materials.get(0).get(Diffuse) as TextureAttribute
-        val def = RoadTiles.getRoadTileByNeighbors(right, bottom, left, top)!!.textureDefinition
-        textureAttribute.set(TextureRegion(am.getAssetByDefinition(def)))
+        val roadTile = RoadTiles.getRoadTileByNeighbors(right, btm, left, top)
+        if (roadTile != null) {
+            textureAttribute.set(TextureRegion(am.getAssetByDefinition(roadTile.textureDefinition)))
+        }
     }
 
     private fun randomizeSand(

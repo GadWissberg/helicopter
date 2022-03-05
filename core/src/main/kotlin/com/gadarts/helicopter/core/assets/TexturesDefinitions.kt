@@ -18,19 +18,19 @@ enum class TexturesDefinitions(fileNames: Int = 1, ninepatch: Boolean = false) :
     SAND_DEC(4),
     VERTICAL,
     HORIZONTAL,
-    CROSS,
-    HORIZONTAL_BOTTOM,
-    HORIZONTAL_TOP,
-    VERTICAL_LEFT,
-    VERTICAL_RIGHT,
-    LEFT_TO_BOTTOM,
-    RIGHT_TO_BOTTOM,
-    LEFT_TO_TOP,
-    RIGHT_TO_TOP,
-    RIGHT_END,
-    LEFT_END,
-    TOP_END,
-    BOTTOM_END;
+    CROSS(2),
+    HORIZONTAL_BOTTOM(2),
+    HORIZONTAL_TOP(2),
+    VERTICAL_LEFT(2),
+    VERTICAL_RIGHT(2),
+    LEFT_TO_BOTTOM(2),
+    RIGHT_TO_BOTTOM(2),
+    LEFT_TO_TOP(2),
+    RIGHT_TO_TOP(2),
+    RIGHT_END(2),
+    LEFT_END(2),
+    TOP_END(2),
+    BOTTOM_END(2);
 
     private val paths = ArrayList<String>()
 
