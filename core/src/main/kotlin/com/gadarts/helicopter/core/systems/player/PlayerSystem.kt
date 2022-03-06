@@ -112,7 +112,7 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
 
     override fun update(deltaTime: Float) {
         super.update(deltaTime)
-        playerMovementHandler.update(player, deltaTime)
+        playerMovementHandler.update(player, deltaTime, subscribers, commonData.currentMap)
         playerShootingHandler.update(player, subscribers)
     }
 

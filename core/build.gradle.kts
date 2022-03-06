@@ -26,10 +26,10 @@ dependencies {
     implementation("io.github.libktx:ktx-freetype:$ktxVersion")
     testImplementation("junit:junit:$junitVersion")
     testImplementation("org.mockito.kotlin:mockito-kotlin:3.2.0")
-    implementation("com.google.code.gson:gson:2.8.7")
+    implementation("com.google.code.gson:gson:2.9.0")
     testImplementation("io.mockk:mockk:1.12.0")
     implementation("com.google.code.gson:gson:2.9.0")
-
+    implementation("org.danilopianini:java-quadtree:0.1.7")
 }
 
 java {

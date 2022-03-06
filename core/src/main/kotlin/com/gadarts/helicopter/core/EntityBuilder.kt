@@ -120,6 +120,12 @@ class EntityBuilder private constructor() {
         return instance
     }
 
+    fun addGroundComponent(): EntityBuilder {
+        val groundComponent = engine.createComponent(GroundComponent::class.java)
+        entity!!.add(groundComponent)
+        return instance
+    }
+
     companion object {
         private lateinit var instance: EntityBuilder
         var entity: Entity? = null

@@ -20,10 +20,7 @@ import com.badlogic.gdx.math.collision.BoundingBox
 import com.badlogic.gdx.utils.Disposable
 import com.badlogic.gdx.utils.TimeUtils
 import com.gadarts.helicopter.core.assets.GameAssetManager
-import com.gadarts.helicopter.core.components.ArmComponent
-import com.gadarts.helicopter.core.components.PrimaryArmComponent
-import com.gadarts.helicopter.core.components.ComponentsMapper
-import com.gadarts.helicopter.core.components.ModelInstanceComponent
+import com.gadarts.helicopter.core.components.*
 import com.gadarts.helicopter.core.components.child.ChildDecal
 import com.gadarts.helicopter.core.components.child.ChildDecalComponent
 import com.gadarts.helicopter.core.systems.GameEntitySystem
@@ -33,7 +30,7 @@ import kotlin.math.max
 class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscriber {
 
 
-    private lateinit var childrenEntities: ImmutableArray<Entity>
+    private lateinit var childEntities: ImmutableArray<Entity>
     private lateinit var decalBatch: DecalBatch
     private lateinit var armEntities: ImmutableArray<Entity>
     private lateinit var modelBatch: ModelBatch
@@ -42,13 +39,18 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
 
     override fun addedToEngine(engine: Engine?) {
         super.addedToEngine(engine)
+        modelInstanceEntities = engine!!.getEntitiesFor(
+            Family.all(ModelInstanceComponent::class.java)
+                .exclude(GroundComponent::class.java)
+                .get()
+        )
+        armEntities = engine.getEntitiesFor(Family.all(PrimaryArmComponent::class.java).get())
+        childEntities = engine.getEntitiesFor(Family.all(ChildDecalComponent::class.java).get())
+        createBatches()
+    }
+
+    private fun createBatches() {
         decalBatch = DecalBatch(DECALS_POOL_SIZE, CameraGroupStrategy(commonData.camera))
-        val modelInstanceFamily = Family.all(ModelInstanceComponent::class.java).get()
-        modelInstanceEntities = getEngine().getEntitiesFor(modelInstanceFamily)
-        val armFamily = Family.all(PrimaryArmComponent::class.java).get()
-        armEntities = getEngine().getEntitiesFor(armFamily)
-        val childrenFamily = Family.all(ChildDecalComponent::class.java).get()
-        childrenEntities = getEngine().getEntitiesFor(childrenFamily)
         modelBatch = ModelBatch()
     }
 
@@ -72,7 +74,7 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
             renderSpark(ComponentsMapper.primaryArm.get(entity))
             renderSpark(ComponentsMapper.secondaryArm.get(entity))
         }
-        for (entity in childrenEntities) {
+        for (entity in childEntities) {
             renderChildren(entity, deltaTime)
         }
         decalBatch.flush()
@@ -94,10 +96,9 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
         modelBatch.begin(commonData.camera)
         axisModelHandler.render(modelBatch)
         for (entity in modelInstanceEntities) {
-            if (isVisible(entity)) {
-                renderModel(entity)
-            }
+            renderModel(entity)
         }
+        modelBatch.render(commonData.modelCache)
         modelBatch.end()
     }
 
@@ -119,9 +120,11 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
     }
 
 
-    private fun renderModel(entity: Entity?) {
-        val modelInstance = ComponentsMapper.modelInstance.get(entity).modelInstance
-        modelBatch.render(modelInstance)
+    private fun renderModel(entity: Entity) {
+        if (isVisible(entity)) {
+            val modelInstance = ComponentsMapper.modelInstance.get(entity).modelInstance
+            modelBatch.render(modelInstance)
+        }
     }
 
     private fun renderChildren(
@@ -154,7 +157,6 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
 
 
     override fun initialize(am: GameAssetManager) {
-
     }
 
     override fun dispose() {
@@ -177,6 +179,9 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
         arm: ArmComponent
     ) {
 
+    }
+
+    override fun onPlayerEnteredNewRegion(player: Entity) {
     }
 
 }

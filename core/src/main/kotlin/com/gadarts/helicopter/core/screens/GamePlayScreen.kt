@@ -22,11 +22,12 @@ class GamePlayScreen(
 ) : Screen {
 
 
+    private lateinit var data: CommonData
     private lateinit var engine: PooledEngine
 
     override fun show() {
         this.engine = PooledEngine()
-        val data = CommonData(assetsManager)
+        data = CommonData(assetsManager)
         addSystems(data)
         initializeSubscriptions()
         engine.systems.forEach {
@@ -79,6 +80,7 @@ class GamePlayScreen(
 
     override fun dispose() {
         engine.systems.forEach { (it as GameEntitySystem).dispose() }
+        data.dispose()
     }
 
 

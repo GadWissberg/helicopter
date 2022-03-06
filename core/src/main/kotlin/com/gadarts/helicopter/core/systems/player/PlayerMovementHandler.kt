@@ -1,12 +1,13 @@
 package com.gadarts.helicopter.core.systems.player
 
 import com.badlogic.ashley.core.Entity
-import com.badlogic.gdx.math.Quaternion
-import com.badlogic.gdx.math.Vector2
-import com.badlogic.gdx.math.Vector3
+import com.badlogic.gdx.math.*
 import com.badlogic.gdx.utils.TimeUtils
+import com.gadarts.helicopter.core.GameMap
 import com.gadarts.helicopter.core.components.ComponentsMapper
+import com.gadarts.helicopter.core.systems.CommonData.Companion.REGION_SIZE
 import kotlin.math.abs
+import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 
@@ -16,6 +17,7 @@ class PlayerMovementHandler {
     private var rotToAdd = 0F
     private var desiredDirectionChanged: Boolean = false
     private val desiredVelocity = Vector2()
+
     fun onTouchUp() {
         desiredVelocity.setZero()
     }
@@ -112,11 +114,35 @@ class PlayerMovementHandler {
         updateRotationStep(player)
     }
 
-    fun update(player: Entity, deltaTime: Float) {
+    fun update(
+        player: Entity,
+        deltaTime: Float,
+        subscribers: HashSet<PlayerSystemEventsSubscriber>,
+        currentMap: GameMap
+    ) {
         handleRotation(deltaTime, player)
         handleAcceleration(player)
-        takeStep(deltaTime, player)
+        takeStepWithRegionCheck(player, deltaTime, subscribers, currentMap)
         tiltAnimationHandler.update(player)
+    }
+
+    private fun takeStepWithRegionCheck(
+        player: Entity,
+        deltaTime: Float,
+        subscribers: HashSet<PlayerSystemEventsSubscriber>,
+        currentMap: GameMap
+    ) {
+        val transform = ComponentsMapper.modelInstance.get(player).modelInstance.transform
+        val currentPosition = transform.getTranslation(auxVector3_2)
+        val prevHorizontalIndex = floor(currentPosition.x / REGION_SIZE)
+        val prevVerticalIndex = floor(currentPosition.z / REGION_SIZE)
+        takeStep(deltaTime, player, currentMap)
+        val newPosition = transform.getTranslation(auxVector3_2)
+        val newHorizontalIndex = floor(newPosition.x / REGION_SIZE)
+        val newVerticalIndex = floor(newPosition.z / REGION_SIZE)
+        if (prevHorizontalIndex != newHorizontalIndex || prevVerticalIndex != newVerticalIndex) {
+            subscribers.forEach { it.onPlayerEnteredNewRegion(player) }
+        }
     }
 
     fun onTouchDown(lastTouchDown: Long, player: Entity) {
@@ -137,14 +163,26 @@ class PlayerMovementHandler {
         playerComponent.strafing = null
     }
 
-    private fun takeStep(deltaTime: Float, player: Entity) {
+    private fun takeStep(deltaTime: Float, player: Entity, currentMap: GameMap) {
         val playerComponent = ComponentsMapper.player.get(player)
         if (playerComponent.getCurrentVelocity(auxVector2_1).len2() > 1F) {
             val currentVelocity = playerComponent.getCurrentVelocity(auxVector2_1)
             val step = auxVector3_1.set(currentVelocity.x, 0F, -currentVelocity.y)
             step.setLength2(step.len2() - 1F).scl(deltaTime)
-            ComponentsMapper.modelInstance.get(player).modelInstance.transform.trn(step)
+            val transform = ComponentsMapper.modelInstance.get(player).modelInstance.transform
+            transform.trn(step)
+            clampPosition(transform, currentMap)
         }
+    }
+
+    private fun clampPosition(
+        transform: Matrix4,
+        currentMap: GameMap
+    ) {
+        val newPos = transform.getTranslation(auxVector3_1)
+        newPos.x = MathUtils.clamp(newPos.x, 0F, currentMap.tilesMapping.size.toFloat())
+        newPos.z = MathUtils.clamp(newPos.z, 0F, currentMap.tilesMapping[0].size.toFloat())
+        transform.setTranslation(newPos)
     }
 
     private fun applyRotation(player: Entity) {
@@ -166,13 +204,13 @@ class PlayerMovementHandler {
         private const val INITIAL_ROTATION_STEP = 6F
         private val auxVector2_1 = Vector2()
         private val auxVector3_1 = Vector3()
+        private val auxVector3_2 = Vector3()
         private val auxQuat = Quaternion()
         private const val ROT_EPSILON = 0.5F
-        private const val MAX_SPEED = 12F
-        private const val ACCELERATION = 0.03F
-        private const val DECELERATION = 0.04F
+        private const val MAX_SPEED = 14F
+        private const val ACCELERATION = 0.04F
+        private const val DECELERATION = 0.06F
         private const val IDLE_Z_TILT_DEGREES = 12F
         private const val STRAFE_PRESS_INTERVAL = 500
-
     }
 }

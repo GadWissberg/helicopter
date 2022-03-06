@@ -12,4 +12,6 @@ interface PlayerSystemEventsSubscriber : SystemEventsSubscriber {
         arm: ArmComponent,
     )
 
+    fun onPlayerEnteredNewRegion(player: Entity)
+
 }

@@ -1,10 +1,12 @@
 package com.gadarts.helicopter.core.systems
 
+import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.utils.ImmutableArray
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.graphics.g3d.Model
+import com.badlogic.gdx.graphics.g3d.ModelCache
 import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.*
@@ -29,23 +31,48 @@ class MapSystem : GameEntitySystem() {
     override fun initialize(am: GameAssetManager) {
         addTrees(am)
         applyTransformOnAmbEntities()
+    }
+
+    override fun addedToEngine(engine: Engine?) {
+        super.addedToEngine(engine)
         val builder = ModelBuilder()
         builder.begin()
         val texture = assetsManager.getAssetByDefinition(TexturesDefinitions.SAND)
         GeneralUtils.createFlatMesh(builder, "floor", 0.5F, texture, 0F)
         floorModel = builder.end()
-        addGround(am, MAP_SIZE, MAP_SIZE, 0, 0)
-        addGround(am, 20, MAP_SIZE, 0, -20)
+        commonData.modelCache = ModelCache()
+        addGround()
     }
 
-    private fun addGround(am: GameAssetManager, rows: Int, cols: Int, xOffset: Int, zOffset: Int) {
-        val map = am.getAll(GameMap::class.java, com.badlogic.gdx.utils.Array())[0]
+    private fun addGround() {
+        commonData.modelCache.begin()
+        addGroundRegion(MAP_SIZE, MAP_SIZE, 0, 0)
+        addExternalGround()
+        commonData.modelCache.end()
+    }
+
+    private fun addExternalGround() {
+        addGroundRegion(EXT_GROUND_SIZE, MAP_SIZE, 0, -EXT_GROUND_SIZE)
+        addGroundRegion(EXT_GROUND_SIZE, EXT_GROUND_SIZE, -EXT_GROUND_SIZE, -EXT_GROUND_SIZE)
+        addGroundRegion(MAP_SIZE, EXT_GROUND_SIZE, -EXT_GROUND_SIZE, 0)
+        addGroundRegion(EXT_GROUND_SIZE, EXT_GROUND_SIZE, -EXT_GROUND_SIZE, MAP_SIZE)
+        addGroundRegion(EXT_GROUND_SIZE, MAP_SIZE, 0, MAP_SIZE)
+        addGroundRegion(EXT_GROUND_SIZE, EXT_GROUND_SIZE, MAP_SIZE, MAP_SIZE)
+        addGroundRegion(MAP_SIZE, EXT_GROUND_SIZE, MAP_SIZE, 0)
+        addGroundRegion(EXT_GROUND_SIZE, EXT_GROUND_SIZE, MAP_SIZE, -EXT_GROUND_SIZE)
+    }
+
+    private fun addGroundRegion(
+        rows: Int,
+        cols: Int,
+        xOffset: Int,
+        zOffset: Int
+    ) {
         for (row in 0 until rows) {
             for (col in 0 until cols) {
-                addGroundTile(row, col, map, xOffset, zOffset)
+                addGroundTile(row, col, commonData.currentMap, xOffset, zOffset)
             }
         }
-
     }
 
     private fun addGroundTile(
@@ -56,17 +83,21 @@ class MapSystem : GameEntitySystem() {
         zOffset: Int
     ) {
         val modelInstance = ModelInstance(floorModel)
-        val entity = EntityBuilder.begin().addModelInstanceComponent(
-            modelInstance,
-            auxVector1.set(xOffset + col.toFloat() + 0.5F, 0F, zOffset + row.toFloat() + 0.5F)
-        ).finishAndAddToEngine()
+        val entity = EntityBuilder.begin()
+            .addModelInstanceComponent(
+                modelInstance,
+                auxVector1.set(xOffset + col.toFloat() + 0.5F, 0F, zOffset + row.toFloat() + 0.5F)
+            )
+            .addGroundComponent()
+            .finishAndAddToEngine()
+        commonData.modelCache.add(modelInstance)
         var current = GameMap.TILE_TYPE_EMPTY
         val rowWithOffset = row + xOffset
         val colWithOffset = col + zOffset
         if (rowWithOffset >= 0
             && colWithOffset >= 0
-            && rowWithOffset < floors.size
-            && colWithOffset < floors[0].size
+            && rowWithOffset < map.tilesMapping.size
+            && colWithOffset < map.tilesMapping[0].size
         ) {
             current = map.tilesMapping[rowWithOffset][colWithOffset]
             floors[rowWithOffset][colWithOffset] = entity
@@ -86,8 +117,11 @@ class MapSystem : GameEntitySystem() {
         modelInstance: ModelInstance,
         am: GameAssetManager
     ) {
-        val right = col < MAP_SIZE - 1 && map.tilesMapping[row][col + 1] != GameMap.TILE_TYPE_EMPTY
-        val btm = row < MAP_SIZE - 1 && map.tilesMapping[row + 1][col] != GameMap.TILE_TYPE_EMPTY
+        val depth = map.tilesMapping.size
+        val width = map.tilesMapping[0].size
+        if (row >= depth || row < 0 || col >= width || col < 0) return
+        val right = col < width - 1 && map.tilesMapping[row][col + 1] != GameMap.TILE_TYPE_EMPTY
+        val btm = row < depth - 1 && map.tilesMapping[row + 1][col] != GameMap.TILE_TYPE_EMPTY
         val left = col > 0 && map.tilesMapping[row][col - 1] != GameMap.TILE_TYPE_EMPTY
         val top = row > 0 && map.tilesMapping[row - 1][col] != GameMap.TILE_TYPE_EMPTY
         val textureAttribute = modelInstance.materials.get(0).get(Diffuse) as TextureAttribute
@@ -140,6 +174,7 @@ class MapSystem : GameEntitySystem() {
 
     override fun dispose() {
         floorModel.dispose()
+        commonData.modelCache.dispose()
     }
 
     /**
@@ -192,6 +227,7 @@ class MapSystem : GameEntitySystem() {
         private const val MIN_SCALE = 0.95F
         private const val MAX_SCALE = 1.05F
         private const val CHANCE_SAND_DEC = 0.95F
-        const val MAP_SIZE = 20
+        const val MAP_SIZE = 40
+        private const val EXT_GROUND_SIZE = 20
     }
 }

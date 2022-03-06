@@ -3,14 +3,18 @@ package com.gadarts.helicopter.core.systems
 import com.badlogic.ashley.core.Entity
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.PerspectiveCamera
+import com.badlogic.gdx.graphics.g3d.ModelCache
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Touchpad
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
+import com.badlogic.gdx.utils.Disposable
+import com.gadarts.helicopter.core.GameMap
 import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.assets.TexturesDefinitions.JOYSTICK
 import com.gadarts.helicopter.core.assets.TexturesDefinitions.JOYSTICK_CENTER
 
-class CommonData(assetsManager: GameAssetManager) {
+class CommonData(assetsManager: GameAssetManager) : Disposable {
+    val currentMap: GameMap
     lateinit var player: Entity
     var touchpad: Touchpad
     val camera: PerspectiveCamera = PerspectiveCamera(
@@ -19,6 +23,7 @@ class CommonData(assetsManager: GameAssetManager) {
         Gdx.graphics.height.toFloat()
     )
     val stage: Stage = Stage()
+    lateinit var modelCache: ModelCache
 
     init {
         val joystickTexture = assetsManager.getAssetByDefinition(JOYSTICK)
@@ -29,6 +34,7 @@ class CommonData(assetsManager: GameAssetManager) {
             DEAD_ZONE,
             Touchpad.TouchpadStyle(joystickDrawableTex, joystickCenterTex)
         )
+        currentMap = assetsManager.getAll(GameMap::class.java, com.badlogic.gdx.utils.Array())[0]
     }
 
 
@@ -38,5 +44,11 @@ class CommonData(assetsManager: GameAssetManager) {
         const val UI_TABLE_NAME = "ui_table"
         const val SPARK_FORWARD_BIAS = 0.55F
         const val SPARK_HEIGHT_BIAS = 0.37F
+        const val REGION_SIZE = 10.0
+    }
+
+    override fun dispose() {
+        modelCache.dispose()
+        stage.dispose()
     }
 }

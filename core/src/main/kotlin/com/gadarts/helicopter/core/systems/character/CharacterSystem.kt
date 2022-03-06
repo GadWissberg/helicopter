@@ -155,6 +155,10 @@ class CharacterSystem : GameEntitySystem(), PlayerSystemEventsSubscriber {
         )
     }
 
+    override fun onPlayerEnteredNewRegion(player: Entity) {
+
+    }
+
     private fun positionSpark(
         armComp: ArmComponent,
         modelInstance: ModelInstance,
