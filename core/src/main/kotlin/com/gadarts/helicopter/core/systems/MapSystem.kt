@@ -17,6 +17,8 @@ import com.gadarts.helicopter.core.EntityBuilder
 import com.gadarts.helicopter.core.GameMap
 import com.gadarts.helicopter.core.GeneralUtils
 import com.gadarts.helicopter.core.assets.GameAssetManager
+import com.gadarts.helicopter.core.assets.ModelsDefinitions
+import com.gadarts.helicopter.core.assets.ModelsDefinitions.BIG_ROCK
 import com.gadarts.helicopter.core.assets.ModelsDefinitions.PALM_TREE
 import com.gadarts.helicopter.core.assets.TexturesDefinitions
 import com.gadarts.helicopter.core.components.AmbComponent
@@ -24,42 +26,51 @@ import com.gadarts.helicopter.core.components.ComponentsMapper
 
 class MapSystem : GameEntitySystem() {
 
-    private val floors: Array<Array<Entity?>> = Array(MAP_SIZE) { arrayOfNulls(MAP_SIZE) }
+    private lateinit var floors: Array<Array<Entity?>>
     private lateinit var ambEntities: ImmutableArray<Entity>
     private lateinit var floorModel: Model
 
     override fun initialize(am: GameAssetManager) {
-        addTrees(am)
+        addAmbObjects(am)
         applyTransformOnAmbEntities()
     }
 
     override fun addedToEngine(engine: Engine?) {
         super.addedToEngine(engine)
         val builder = ModelBuilder()
-        builder.begin()
-        val texture = assetsManager.getAssetByDefinition(TexturesDefinitions.SAND)
-        GeneralUtils.createFlatMesh(builder, "floor", 0.5F, texture, 0F)
-        floorModel = builder.end()
+        createFloorModel(builder)
+        val tilesMapping = commonData.currentMap.tilesMapping
+        floors = Array(tilesMapping.size) { arrayOfNulls(tilesMapping[0].size) }
         commonData.modelCache = ModelCache()
         addGround()
     }
 
+    private fun createFloorModel(builder: ModelBuilder) {
+        builder.begin()
+        val texture = assetsManager.getAssetByDefinition(TexturesDefinitions.SAND)
+        GeneralUtils.createFlatMesh(builder, "floor", 0.5F, texture, 0F)
+        floorModel = builder.end()
+    }
+
     private fun addGround() {
         commonData.modelCache.begin()
-        addGroundRegion(MAP_SIZE, MAP_SIZE, 0, 0)
-        addExternalGround()
+        val tilesMapping = commonData.currentMap.tilesMapping
+        val depth = tilesMapping.size
+        val width = tilesMapping[0].size
+        addGroundRegion(depth, width, 0, 0)
+        addExternalGround(width, depth)
         commonData.modelCache.end()
     }
 
-    private fun addExternalGround() {
-        addGroundRegion(EXT_GROUND_SIZE, MAP_SIZE, 0, -EXT_GROUND_SIZE)
+    private fun addExternalGround(width: Int, depth: Int) {
+        addGroundRegion(EXT_GROUND_SIZE, width, 0, -EXT_GROUND_SIZE)
         addGroundRegion(EXT_GROUND_SIZE, EXT_GROUND_SIZE, -EXT_GROUND_SIZE, -EXT_GROUND_SIZE)
-        addGroundRegion(MAP_SIZE, EXT_GROUND_SIZE, -EXT_GROUND_SIZE, 0)
-        addGroundRegion(EXT_GROUND_SIZE, EXT_GROUND_SIZE, -EXT_GROUND_SIZE, MAP_SIZE)
-        addGroundRegion(EXT_GROUND_SIZE, MAP_SIZE, 0, MAP_SIZE)
-        addGroundRegion(EXT_GROUND_SIZE, EXT_GROUND_SIZE, MAP_SIZE, MAP_SIZE)
-        addGroundRegion(MAP_SIZE, EXT_GROUND_SIZE, MAP_SIZE, 0)
-        addGroundRegion(EXT_GROUND_SIZE, EXT_GROUND_SIZE, MAP_SIZE, -EXT_GROUND_SIZE)
+        addGroundRegion(depth, EXT_GROUND_SIZE, -EXT_GROUND_SIZE, 0)
+        addGroundRegion(EXT_GROUND_SIZE, EXT_GROUND_SIZE, -EXT_GROUND_SIZE, depth)
+        addGroundRegion(EXT_GROUND_SIZE, width, 0, depth)
+        addGroundRegion(EXT_GROUND_SIZE, EXT_GROUND_SIZE, width, depth)
+        addGroundRegion(depth, EXT_GROUND_SIZE, width, 0)
+        addGroundRegion(EXT_GROUND_SIZE, EXT_GROUND_SIZE, width, -EXT_GROUND_SIZE)
     }
 
     private fun addGroundRegion(
@@ -156,18 +167,20 @@ class MapSystem : GameEntitySystem() {
         }
     }
 
-    private fun addTrees(am: GameAssetManager) {
-        addTree(am, Vector3(0F, 0F, 0F))
-        addTree(am, Vector3(3F, 0F, 0F))
-        addTree(am, Vector3(0F, 0F, 3F))
-        addTree(am, Vector3(3F, 0F, 3F))
+    private fun addAmbObjects(am: GameAssetManager) {
+        addAmbObject(am, Vector3(0F, 0F, 0F), PALM_TREE)
+        addAmbObject(am, Vector3(3F, 0F, 0F), PALM_TREE)
+        addAmbObject(am, Vector3(0F, 0F, 3F), PALM_TREE)
+        addAmbObject(am, Vector3(3F, 0F, 3F), BIG_ROCK)
     }
 
-    private fun addTree(am: GameAssetManager, position: Vector3) {
+    private fun addAmbObject(
+        am: GameAssetManager, position: Vector3, modelDefinition: ModelsDefinitions
+    ) {
         val randomScale = MathUtils.random(MIN_SCALE, MAX_SCALE)
         val scale = auxVector1.set(randomScale, randomScale, randomScale)
         EntityBuilder.begin()
-            .addModelInstanceComponent(am.getAssetByDefinition(PALM_TREE), position)
+            .addModelInstanceComponent(am.getAssetByDefinition(modelDefinition), position)
             .addAmbComponent(scale, MathUtils.random(0F, 360F))
             .finishAndAddToEngine()
     }
@@ -227,7 +240,6 @@ class MapSystem : GameEntitySystem() {
         private const val MIN_SCALE = 0.95F
         private const val MAX_SCALE = 1.05F
         private const val CHANCE_SAND_DEC = 0.95F
-        const val MAP_SIZE = 40
         private const val EXT_GROUND_SIZE = 20
     }
 }

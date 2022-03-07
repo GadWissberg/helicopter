@@ -7,7 +7,6 @@ import com.badlogic.gdx.assets.loaders.FileHandleResolver
 import com.badlogic.gdx.files.FileHandle
 import com.badlogic.gdx.utils.Array
 import com.gadarts.helicopter.core.GameMap
-import com.gadarts.helicopter.core.systems.MapSystem.Companion.MAP_SIZE
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 
@@ -35,13 +34,15 @@ class MapLoader(resolver: FileHandleResolver) :
         file: FileHandle?,
         parameter: MapLoaderParameter?
     ): GameMap {
-        val tilesMapping = Array(MAP_SIZE) { CharArray(MAP_SIZE) }
-        val mapJsonObject = gson.fromJson(file!!.reader(), JsonObject::class.java)
-        val tilesMappingString =
-            mapJsonObject.getAsJsonPrimitive(KEY_TILES_MAPPING).asString.replace("\n", "")
-        for (row in 0 until MAP_SIZE) {
-            for (col in 0 until MAP_SIZE) {
-                tilesMapping[row][col] = tilesMappingString[row * MAP_SIZE + col]
+        val jsonObj = gson.fromJson(file!!.reader(), JsonObject::class.java)
+        val asJsonPrimitive = jsonObj.getAsJsonPrimitive(KEY_TILES_MAPPING).asString
+        val width = asJsonPrimitive.indexOf('\n')
+        val depth = asJsonPrimitive.count { it == '\n' }
+        val tilesString = asJsonPrimitive.replace("\n", "")
+        val tilesMapping = Array(depth) { CharArray(width) }
+        for (row in 0 until depth) {
+            for (col in 0 until width) {
+                tilesMapping[row][col] = tilesString[row * width + col]
             }
         }
         return GameMap(tilesMapping)
