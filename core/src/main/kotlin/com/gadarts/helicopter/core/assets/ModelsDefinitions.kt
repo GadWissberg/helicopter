@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.g3d.Model
 
 enum class ModelsDefinitions(fileNames: Int = 1) : AssetDefinition<Model> {
 
-    APACHE, PROPELLER, BACK_PROPELLER, BULLET, MISSILE, PALM_TREE(3), BIG_ROCK(1);
+    APACHE, PROPELLER, BACK_PROPELLER, BULLET, MISSILE, PALM_TREE(3), BIG_ROCK(3);
 
     private val paths = ArrayList<String>()
     private val pathFormat = "models/%s.g3dj"

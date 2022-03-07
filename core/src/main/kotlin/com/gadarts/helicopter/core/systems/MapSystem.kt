@@ -168,9 +168,9 @@ class MapSystem : GameEntitySystem() {
     }
 
     private fun addAmbObjects(am: GameAssetManager) {
-        addAmbObject(am, Vector3(0F, 0F, 0F), PALM_TREE)
-        addAmbObject(am, Vector3(3F, 0F, 0F), PALM_TREE)
-        addAmbObject(am, Vector3(0F, 0F, 3F), PALM_TREE)
+        addAmbObject(am, Vector3(0F, 0F, 0F), BIG_ROCK)
+        addAmbObject(am, Vector3(3F, 0F, 0F), BIG_ROCK)
+        addAmbObject(am, Vector3(0F, 0F, 3F), BIG_ROCK)
         addAmbObject(am, Vector3(3F, 0F, 3F), BIG_ROCK)
     }
 
