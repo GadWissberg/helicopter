@@ -246,7 +246,7 @@
 			"textures": [
 				{
 					"id": "Texture.004", 
-					"filename": "big_rock_2.png", 
+					"filename": "rock_2.png",
 					"type": "DIFFUSE"
 				}
 			]

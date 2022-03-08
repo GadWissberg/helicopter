@@ -18,8 +18,8 @@ import com.gadarts.helicopter.core.GameMap
 import com.gadarts.helicopter.core.GeneralUtils
 import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.assets.ModelsDefinitions
-import com.gadarts.helicopter.core.assets.ModelsDefinitions.BIG_ROCK
-import com.gadarts.helicopter.core.assets.ModelsDefinitions.PALM_TREE
+import com.gadarts.helicopter.core.assets.ModelsDefinitions.BUILDING
+import com.gadarts.helicopter.core.assets.ModelsDefinitions.ROCK
 import com.gadarts.helicopter.core.assets.TexturesDefinitions
 import com.gadarts.helicopter.core.components.AmbComponent
 import com.gadarts.helicopter.core.components.ComponentsMapper
@@ -168,20 +168,23 @@ class MapSystem : GameEntitySystem() {
     }
 
     private fun addAmbObjects(am: GameAssetManager) {
-        addAmbObject(am, Vector3(0F, 0F, 0F), BIG_ROCK)
-        addAmbObject(am, Vector3(3F, 0F, 0F), BIG_ROCK)
-        addAmbObject(am, Vector3(0F, 0F, 3F), BIG_ROCK)
-        addAmbObject(am, Vector3(3F, 0F, 3F), BIG_ROCK)
+        addAmbObject(am, Vector3(0F, 0F, 0F), ROCK)
+        addAmbObject(am, Vector3(3F, 0F, 0F), ROCK)
+        addAmbObject(am, Vector3(0F, 0F, 3F), ROCK)
+        addAmbObject(am, Vector3(3F, 0F, 3F), BUILDING, false)
     }
 
     private fun addAmbObject(
-        am: GameAssetManager, position: Vector3, modelDefinition: ModelsDefinitions
+        am: GameAssetManager,
+        position: Vector3,
+        modelDefinition: ModelsDefinitions,
+        rotate: Boolean = true
     ) {
         val randomScale = MathUtils.random(MIN_SCALE, MAX_SCALE)
         val scale = auxVector1.set(randomScale, randomScale, randomScale)
         EntityBuilder.begin()
             .addModelInstanceComponent(am.getAssetByDefinition(modelDefinition), position)
-            .addAmbComponent(scale, MathUtils.random(0F, 360F))
+            .addAmbComponent(scale, if (rotate) MathUtils.random(0F, 360F) else 0F)
             .finishAndAddToEngine()
     }
 

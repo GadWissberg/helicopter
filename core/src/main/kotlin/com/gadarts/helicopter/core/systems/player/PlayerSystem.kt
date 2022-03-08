@@ -120,7 +120,7 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
     private fun addPlayer(engine: PooledEngine, am: GameAssetManager): Entity {
         EntityBuilder.initialize(engine)
         val apacheModel = am.getAssetByDefinition(ModelsDefinitions.APACHE)
-        val startPos = auxVector3_1.set(0F, 2F, 2F)
+        val startPos = auxVector3_1.set(0F, PLAYER_HEIGHT, 2F)
         val entityBuilder = EntityBuilder.begin().addModelInstanceComponent(apacheModel, startPos)
         if (DefaultGameSettings.DISPLAY_PROPELLER) {
             addPropeller(am, entityBuilder)
@@ -207,5 +207,6 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
         private const val PRI_BULLET_SPEED = 32F
         private const val SEC_BULLET_SPEED = 8F
         private const val SECONDARY_POSITION_BIAS = 0.3F
+        private const val PLAYER_HEIGHT = 3F
     }
 }
