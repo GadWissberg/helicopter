@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.utils.ImmutableArray
+import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.graphics.g3d.Model
 import com.badlogic.gdx.graphics.g3d.ModelCache
@@ -58,19 +59,44 @@ class MapSystem : GameEntitySystem() {
         val depth = tilesMapping.size
         val width = tilesMapping[0].size
         addGroundRegion(depth, width, 0, 0)
-        addExternalGround(width, depth)
+        addAllExternalGrounds(width, depth)
         commonData.modelCache.end()
     }
 
-    private fun addExternalGround(width: Int, depth: Int) {
-        addGroundRegion(EXT_GROUND_SIZE, width, 0, -EXT_GROUND_SIZE)
-        addGroundRegion(EXT_GROUND_SIZE, EXT_GROUND_SIZE, -EXT_GROUND_SIZE, -EXT_GROUND_SIZE)
-        addGroundRegion(depth, EXT_GROUND_SIZE, -EXT_GROUND_SIZE, 0)
-        addGroundRegion(EXT_GROUND_SIZE, EXT_GROUND_SIZE, -EXT_GROUND_SIZE, depth)
-        addGroundRegion(EXT_GROUND_SIZE, width, 0, depth)
-        addGroundRegion(EXT_GROUND_SIZE, EXT_GROUND_SIZE, width, depth)
-        addGroundRegion(depth, EXT_GROUND_SIZE, width, 0)
-        addGroundRegion(EXT_GROUND_SIZE, EXT_GROUND_SIZE, width, -EXT_GROUND_SIZE)
+    private fun addAllExternalGrounds(width: Int, depth: Int) {
+        addExtGround(width, EXT_SIZE, width / 2F, -EXT_SIZE / 2F)
+        addExtGround(EXT_SIZE, EXT_SIZE, -EXT_SIZE / 2F, -EXT_SIZE / 2F)
+        addExtGround(EXT_SIZE, depth, -width / 2F, depth / 2F)
+        addExtGround(EXT_SIZE, EXT_SIZE, -width / 2F, depth + EXT_SIZE / 2F)
+        addExtGround(width, EXT_SIZE, width / 2F, depth + EXT_SIZE / 2F)
+        addExtGround(EXT_SIZE, EXT_SIZE, width + EXT_SIZE / 2F, depth + EXT_SIZE / 2F)
+        addExtGround(EXT_SIZE, depth, width + EXT_SIZE / 2F, depth / 2F)
+        addExtGround(EXT_SIZE, EXT_SIZE, width + EXT_SIZE / 2F, -depth / 2F)
+    }
+
+    private fun addExtGround(width: Int, depth: Int, x: Float, z: Float) {
+        val modelInstance = ModelInstance(floorModel)
+        createAndAddGroundTileEntity(
+            modelInstance,
+            auxVector1.set(x, 0F, z)
+        )
+        modelInstance.transform.scl(width.toFloat(), 1F, EXT_SIZE.toFloat())
+        val textureAttribute = modelInstance.materials.first().get(Diffuse) as TextureAttribute
+        initializeExternalGroundTextureAttribute(textureAttribute, width, depth)
+        commonData.modelCache.add(modelInstance)
+    }
+
+    private fun initializeExternalGroundTextureAttribute(
+        textureAttribute: TextureAttribute,
+        width: Int,
+        depth: Int
+    ) {
+        textureAttribute.textureDescription.uWrap = Texture.TextureWrap.Repeat
+        textureAttribute.textureDescription.vWrap = Texture.TextureWrap.Repeat
+        textureAttribute.offsetU = 0F
+        textureAttribute.offsetV = 0F
+        textureAttribute.scaleU = width.toFloat()
+        textureAttribute.scaleV = depth.toFloat()
     }
 
     private fun addGroundRegion(
@@ -81,7 +107,13 @@ class MapSystem : GameEntitySystem() {
     ) {
         for (row in 0 until rows) {
             for (col in 0 until cols) {
-                addGroundTile(row, col, commonData.currentMap, xOffset, zOffset)
+                addGroundTile(
+                    row,
+                    col,
+                    xOffset,
+                    zOffset,
+                    ModelInstance(floorModel)
+                )
             }
         }
     }
@@ -89,36 +121,42 @@ class MapSystem : GameEntitySystem() {
     private fun addGroundTile(
         row: Int,
         col: Int,
-        map: GameMap,
         xOffset: Int,
-        zOffset: Int
+        zOffset: Int,
+        modelInstance: ModelInstance
     ) {
-        val modelInstance = ModelInstance(floorModel)
-        val entity = EntityBuilder.begin()
-            .addModelInstanceComponent(
-                modelInstance,
-                auxVector1.set(xOffset + col.toFloat() + 0.5F, 0F, zOffset + row.toFloat() + 0.5F)
-            )
-            .addGroundComponent()
-            .finishAndAddToEngine()
+        val entity = createAndAddGroundTileEntity(
+            modelInstance,
+            auxVector1.set(xOffset + col.toFloat() + 0.5F, 0F, zOffset + row.toFloat() + 0.5F)
+        )
         commonData.modelCache.add(modelInstance)
         var current = GameMap.TILE_TYPE_EMPTY
         val rowWithOffset = row + xOffset
         val colWithOffset = col + zOffset
         if (rowWithOffset >= 0
             && colWithOffset >= 0
-            && rowWithOffset < map.tilesMapping.size
-            && colWithOffset < map.tilesMapping[0].size
+            && rowWithOffset < commonData.currentMap.tilesMapping.size
+            && colWithOffset < commonData.currentMap.tilesMapping[0].size
         ) {
-            current = map.tilesMapping[rowWithOffset][colWithOffset]
+            current = commonData.currentMap.tilesMapping[rowWithOffset][colWithOffset]
             floors[rowWithOffset][colWithOffset] = entity
         }
         if (current != GameMap.TILE_TYPE_EMPTY) {
-            initializeRoadTile(map, row, col, modelInstance, assetsManager)
+            initializeRoadTile(commonData.currentMap, row, col, modelInstance, assetsManager)
         } else {
             randomizeSand(assetsManager, modelInstance)
         }
 
+    }
+
+    private fun createAndAddGroundTileEntity(
+        modelInstance: ModelInstance,
+        position: Vector3
+    ): Entity {
+        return EntityBuilder.begin()
+            .addModelInstanceComponent(modelInstance, position)
+            .addGroundComponent()
+            .finishAndAddToEngine()
     }
 
     private fun initializeRoadTile(
@@ -169,9 +207,9 @@ class MapSystem : GameEntitySystem() {
 
     private fun addAmbObjects(am: GameAssetManager) {
         addAmbObject(am, Vector3(0F, 0F, 0F), ROCK)
-        addAmbObject(am, Vector3(3F, 0F, 0F), ROCK)
-        addAmbObject(am, Vector3(0F, 0F, 3F), ROCK)
-        addAmbObject(am, Vector3(3F, 0F, 3F), BUILDING, false)
+        addAmbObject(am, Vector3(5F, 0F, 0F), BUILDING, false)
+        addAmbObject(am, Vector3(0F, 0F, 5F), BUILDING, false)
+        addAmbObject(am, Vector3(5F, 0F, 5F), BUILDING, false)
     }
 
     private fun addAmbObject(
@@ -243,6 +281,6 @@ class MapSystem : GameEntitySystem() {
         private const val MIN_SCALE = 0.95F
         private const val MAX_SCALE = 1.05F
         private const val CHANCE_SAND_DEC = 0.95F
-        private const val EXT_GROUND_SIZE = 20
+        private const val EXT_SIZE = 40
     }
 }
