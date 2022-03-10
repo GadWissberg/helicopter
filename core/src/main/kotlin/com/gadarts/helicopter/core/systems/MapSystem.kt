@@ -19,8 +19,7 @@ import com.gadarts.helicopter.core.GameMap
 import com.gadarts.helicopter.core.GeneralUtils
 import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.assets.ModelsDefinitions
-import com.gadarts.helicopter.core.assets.ModelsDefinitions.BUILDING
-import com.gadarts.helicopter.core.assets.ModelsDefinitions.ROCK
+import com.gadarts.helicopter.core.assets.ModelsDefinitions.*
 import com.gadarts.helicopter.core.assets.TexturesDefinitions
 import com.gadarts.helicopter.core.assets.TexturesDefinitions.*
 import com.gadarts.helicopter.core.components.AmbComponent
@@ -228,6 +227,11 @@ class MapSystem : GameEntitySystem() {
         addAmbModelObject(am, Vector3(5F, 0F, 0F), BUILDING, false)
         addAmbModelObject(am, Vector3(0F, 0F, 5F), BUILDING, false)
         addAmbModelObject(am, Vector3(5F, 0F, 5F), BUILDING, false)
+        addAmbModelObject(am, Vector3(7F, 0F, 7F), PALM_TREE)
+        addAmbModelObject(am, Vector3(0F, 0F, 7F), PALM_TREE)
+        addAmbModelObject(am, Vector3(7F, 0F, 0F), PALM_TREE)
+        addAmbModelObject(am, Vector3(8F, 0F, 8F), ROCK)
+        addAmbModelObject(am, Vector3(0F, 0F, 8F), ROCK)
     }
 
     private fun addAmbModelObject(
