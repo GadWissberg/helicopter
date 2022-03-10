@@ -20,5 +20,7 @@ object ComponentsMapper {
         ComponentMapper.getFor(BulletComponent::class.java)
     val amb: ComponentMapper<AmbComponent> =
         ComponentMapper.getFor(AmbComponent::class.java)
+    val independentDecal: ComponentMapper<IndependentDecalComponent> =
+        ComponentMapper.getFor(IndependentDecalComponent::class.java)
 
 }

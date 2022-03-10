@@ -2,7 +2,9 @@ package com.gadarts.helicopter.core
 
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.PooledEngine
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.audio.Sound
+import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.graphics.g3d.Model
 import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.graphics.g3d.decals.Decal
@@ -45,6 +47,31 @@ class EntityBuilder private constructor() {
         entity!!.add(component)
         return instance
 
+    }
+
+    fun addDecalComponent(
+        texture: TextureRegion,
+        position: Vector3,
+    ): EntityBuilder {
+        val component = engine.createComponent(IndependentDecalComponent::class.java)
+        val decal = createDecal(texture)
+        decal.position = position
+        component.init(decal)
+        entity!!.add(component)
+        return instance
+    }
+
+    private fun createDecal(texture: TextureRegion): Decal {
+        Gdx.app.log(
+            "!",
+            "${texture.regionWidth}, ${texture.regionHeight},${texture.regionWidth * DECAL_SCALE}, ${texture.regionHeight * DECAL_SCALE},"
+        )
+        return Decal.newDecal(
+            texture.regionWidth * DECAL_SCALE,
+            texture.regionHeight * DECAL_SCALE,
+            texture,
+            true
+        )
     }
 
     fun addAmbSoundComponent(sound: Sound): EntityBuilder {
@@ -113,6 +140,10 @@ class EntityBuilder private constructor() {
         return instance
     }
 
+    fun addAmbComponent(): EntityBuilder {
+        return addAmbComponent(auxVector.set(1F, 1F, 1F), 0F)
+    }
+
     fun addAmbComponent(scale: Vector3, rotation: Float): EntityBuilder {
         val ambComponent = engine.createComponent(AmbComponent::class.java)
         ambComponent.init(scale, rotation)
@@ -127,9 +158,12 @@ class EntityBuilder private constructor() {
     }
 
     companion object {
+
         private lateinit var instance: EntityBuilder
         var entity: Entity? = null
         lateinit var engine: PooledEngine
+        private val auxVector = Vector3()
+        private const val DECAL_SCALE = 0.005F
         fun begin(): EntityBuilder {
             entity = engine.createEntity()
             return instance

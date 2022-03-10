@@ -30,7 +30,8 @@ enum class TexturesDefinitions(fileNames: Int = 1, ninepatch: Boolean = false) :
     RIGHT_END(2),
     LEFT_END(2),
     TOP_END(2),
-    BOTTOM_END(2);
+    BOTTOM_END(2),
+    BUSH(3);
 
     private val paths = ArrayList<String>()
 

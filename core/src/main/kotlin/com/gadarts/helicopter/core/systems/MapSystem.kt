@@ -22,6 +22,7 @@ import com.gadarts.helicopter.core.assets.ModelsDefinitions
 import com.gadarts.helicopter.core.assets.ModelsDefinitions.BUILDING
 import com.gadarts.helicopter.core.assets.ModelsDefinitions.ROCK
 import com.gadarts.helicopter.core.assets.TexturesDefinitions
+import com.gadarts.helicopter.core.assets.TexturesDefinitions.*
 import com.gadarts.helicopter.core.components.AmbComponent
 import com.gadarts.helicopter.core.components.ComponentsMapper
 
@@ -32,8 +33,24 @@ class MapSystem : GameEntitySystem() {
     private lateinit var floorModel: Model
 
     override fun initialize(am: GameAssetManager) {
-        addAmbObjects(am)
+        addAmbModels(am)
+        addAmbBillboards(am)
         applyTransformOnAmbEntities()
+    }
+
+    private fun addAmbBillboards(am: GameAssetManager) {
+        addAmbDecal(am, 8F, 7F)
+        addAmbDecal(am, 11F, 7F)
+        addAmbDecal(am, 13F, 7F)
+        addAmbDecal(am, 15F, 7F)
+    }
+
+    private fun addAmbDecal(am: GameAssetManager, x: Float, z: Float) {
+        val textureRegion = TextureRegion(am.getAssetByDefinition(BUSH))
+        EntityBuilder.begin()
+            .addDecalComponent(textureRegion, auxVector1.set(x, 0.18F, z))
+            .addAmbComponent()
+            .finishAndAddToEngine()
     }
 
     override fun addedToEngine(engine: Engine?) {
@@ -48,7 +65,7 @@ class MapSystem : GameEntitySystem() {
 
     private fun createFloorModel(builder: ModelBuilder) {
         builder.begin()
-        val texture = assetsManager.getAssetByDefinition(TexturesDefinitions.SAND)
+        val texture = assetsManager.getAssetByDefinition(SAND)
         GeneralUtils.createFlatMesh(builder, "floor", 0.5F, texture, 0F)
         floorModel = builder.end()
     }
@@ -185,7 +202,7 @@ class MapSystem : GameEntitySystem() {
         modelInstance: ModelInstance
     ) {
         if (MathUtils.random() > CHANCE_SAND_DEC) {
-            val sandDecTexture = am.getAssetByDefinition(TexturesDefinitions.SAND_DEC)
+            val sandDecTexture = am.getAssetByDefinition(SAND_DEC)
             val attr = modelInstance.materials.first().get(Diffuse) as TextureAttribute
             val textureRegion = TextureRegion(sandDecTexture)
             attr.set(textureRegion)
@@ -199,20 +216,21 @@ class MapSystem : GameEntitySystem() {
     private fun applyTransformOnAmbEntities() {
         ambEntities = engine.getEntitiesFor(Family.all(AmbComponent::class.java).get())
         ambEntities.forEach {
+            if (!ComponentsMapper.modelInstance.has(it)) return
             val scale = ComponentsMapper.amb.get(it).getScale(auxVector1)
             val transform = ComponentsMapper.modelInstance.get(it).modelInstance.transform
             transform.scl(scale).rotate(Vector3.Y, ComponentsMapper.amb.get(it).rotation)
         }
     }
 
-    private fun addAmbObjects(am: GameAssetManager) {
-        addAmbObject(am, Vector3(0F, 0F, 0F), ROCK)
-        addAmbObject(am, Vector3(5F, 0F, 0F), BUILDING, false)
-        addAmbObject(am, Vector3(0F, 0F, 5F), BUILDING, false)
-        addAmbObject(am, Vector3(5F, 0F, 5F), BUILDING, false)
+    private fun addAmbModels(am: GameAssetManager) {
+        addAmbModelObject(am, Vector3(0F, 0F, 0F), ROCK)
+        addAmbModelObject(am, Vector3(5F, 0F, 0F), BUILDING, false)
+        addAmbModelObject(am, Vector3(0F, 0F, 5F), BUILDING, false)
+        addAmbModelObject(am, Vector3(5F, 0F, 5F), BUILDING, false)
     }
 
-    private fun addAmbObject(
+    private fun addAmbModelObject(
         am: GameAssetManager,
         position: Vector3,
         modelDefinition: ModelsDefinitions,

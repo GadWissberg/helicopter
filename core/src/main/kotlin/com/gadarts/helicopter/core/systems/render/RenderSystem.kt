@@ -29,14 +29,13 @@ import kotlin.math.max
 
 class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscriber {
 
-
+    private lateinit var decalEntities: ImmutableArray<Entity>
     private lateinit var childEntities: ImmutableArray<Entity>
     private lateinit var decalBatch: DecalBatch
     private lateinit var armEntities: ImmutableArray<Entity>
     private lateinit var modelBatch: ModelBatch
     private lateinit var modelInstanceEntities: ImmutableArray<Entity>
     private var axisModelHandler = AxisModelHandler()
-
     override fun addedToEngine(engine: Engine?) {
         super.addedToEngine(engine)
         modelInstanceEntities = engine!!.getEntitiesFor(
@@ -46,6 +45,8 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
         )
         armEntities = engine.getEntitiesFor(Family.all(PrimaryArmComponent::class.java).get())
         childEntities = engine.getEntitiesFor(Family.all(ChildDecalComponent::class.java).get())
+        decalEntities =
+            engine.getEntitiesFor(Family.all(IndependentDecalComponent::class.java).get())
         createBatches()
     }
 
@@ -70,15 +71,28 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
 
     private fun renderDecals(deltaTime: Float) {
         Gdx.gl.glDepthMask(false)
+        renderSparks()
+        for (entity in childEntities) {
+            renderChildren(entity, deltaTime)
+        }
+        renderIndependentDecals()
+        decalBatch.flush()
+        Gdx.gl.glDepthMask(true)
+    }
+
+    private fun renderIndependentDecals() {
+        for (entity in decalEntities) {
+            val decal = ComponentsMapper.independentDecal.get(entity).decal
+            faceDecalToCamera(decal)
+            decalBatch.add(decal)
+        }
+    }
+
+    private fun renderSparks() {
         for (entity in armEntities) {
             renderSpark(ComponentsMapper.primaryArm.get(entity))
             renderSpark(ComponentsMapper.secondaryArm.get(entity))
         }
-        for (entity in childEntities) {
-            renderChildren(entity, deltaTime)
-        }
-        decalBatch.flush()
-        Gdx.gl.glDepthMask(true)
     }
 
     private fun isVisible(entity: Entity): Boolean {
@@ -119,7 +133,6 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
         decal.lookAt(auxVector3_1.set(decal.position).sub(camera.direction), camera.up)
     }
 
-
     private fun renderModel(entity: Entity) {
         if (isVisible(entity)) {
             val modelInstance = ComponentsMapper.modelInstance.get(entity).modelInstance
@@ -155,22 +168,11 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
         decalBatch.add(child.decal)
     }
 
-
     override fun initialize(am: GameAssetManager) {
     }
 
     override fun dispose() {
         modelBatch.dispose()
-    }
-
-    companion object {
-        val auxVector3_1 = Vector3()
-        val auxVector3_2 = Vector3()
-        val auxQuat = Quaternion()
-        val auxBox = BoundingBox()
-        const val ROT_STEP = 1600F
-        const val SPARK_DURATION = 40L
-        const val DECALS_POOL_SIZE = 200
     }
 
     override fun onPlayerWeaponShot(
@@ -182,6 +184,16 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
     }
 
     override fun onPlayerEnteredNewRegion(player: Entity) {
+    }
+
+    companion object {
+        val auxVector3_1 = Vector3()
+        val auxVector3_2 = Vector3()
+        val auxQuat = Quaternion()
+        val auxBox = BoundingBox()
+        const val ROT_STEP = 1600F
+        const val SPARK_DURATION = 40L
+        const val DECALS_POOL_SIZE = 200
     }
 
 }
