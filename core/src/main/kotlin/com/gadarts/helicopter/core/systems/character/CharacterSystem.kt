@@ -32,6 +32,10 @@ class CharacterSystem : GameEntitySystem(), PlayerSystemEventsSubscriber {
         bulletEntities = engine.getEntitiesFor(Family.all(BulletComponent::class.java).get())
     }
 
+    override fun resume(delta: Long) {
+
+    }
+
     override fun update(deltaTime: Float) {
         super.update(deltaTime)
         update3dSound()

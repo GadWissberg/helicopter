@@ -1,7 +1,9 @@
 package com.gadarts.helicopter.core.screens
 
 import com.badlogic.ashley.core.PooledEngine
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Screen
+import com.badlogic.gdx.utils.TimeUtils
 import com.gadarts.helicopter.core.SoundPlayer
 import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.systems.*
@@ -22,6 +24,7 @@ class GamePlayScreen(
 ) : Screen {
 
 
+    private var pauseTime: Long = 0
     private lateinit var data: CommonData
     private lateinit var engine: PooledEngine
 
@@ -70,9 +73,12 @@ class GamePlayScreen(
     }
 
     override fun pause() {
+        pauseTime = TimeUtils.millis()
     }
 
     override fun resume() {
+        val delta = TimeUtils.timeSinceMillis(pauseTime)
+        engine.systems.forEach { (it as GameEntitySystem).resume(delta) }
     }
 
     override fun hide() {

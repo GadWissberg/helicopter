@@ -67,6 +67,10 @@ class HudSystem : GameEntitySystem(), Notifier<HudSystemEventsSubscriber> {
             ICON_MISSILES, JOYSTICK_PADDING_LEFT, secWeaponButtonClickListener)
     }
 
+    override fun resume(delta: Long) {
+
+    }
+
     private fun addJoystick(ui: Table, assetsManager: GameAssetManager) {
         val joystickTexture = assetsManager.getAssetByDefinition(JOYSTICK)
         ui.add(commonData.touchpad)

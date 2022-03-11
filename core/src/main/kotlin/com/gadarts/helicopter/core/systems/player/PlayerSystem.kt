@@ -49,6 +49,10 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
         playerShootingHandler.initialize(assetsManager)
     }
 
+    override fun resume(delta: Long) {
+
+    }
+
     private fun createPropellerBlurredModel(assetsManager: GameAssetManager) {
         val builder = ModelBuilder()
         builder.begin()

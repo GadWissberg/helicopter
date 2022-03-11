@@ -3,16 +3,19 @@ package com.gadarts.helicopter.core.assets
 import com.badlogic.gdx.assets.AssetLoaderParameters
 import com.badlogic.gdx.audio.Sound
 
-enum class SfxDefinitions : AssetDefinition<Sound> {
+enum class SfxDefinitions(fileNames: Int = 1) : AssetDefinition<Sound> {
 
     PROPELLER,
     MACHINE_GUN,
-    MISSILE;
+    MISSILE,
+    AMB_WIND(2),
+    AMB_EAGLE,
+    AMB_OUD(3);
 
     private val paths = ArrayList<String>()
 
     init {
-        initializePaths("sfx/%s.wav")
+        initializePaths("sfx/%s.wav", fileNames)
     }
 
     override fun getPaths(): ArrayList<String> {

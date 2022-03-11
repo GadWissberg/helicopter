@@ -12,14 +12,16 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.*
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
-import com.badlogic.gdx.math.MathUtils
+import com.badlogic.gdx.math.MathUtils.*
 import com.badlogic.gdx.math.Vector3
+import com.badlogic.gdx.utils.TimeUtils.*
 import com.gadarts.helicopter.core.EntityBuilder
 import com.gadarts.helicopter.core.GameMap
 import com.gadarts.helicopter.core.GeneralUtils
 import com.gadarts.helicopter.core.assets.GameAssetManager
 import com.gadarts.helicopter.core.assets.ModelsDefinitions
 import com.gadarts.helicopter.core.assets.ModelsDefinitions.*
+import com.gadarts.helicopter.core.assets.SfxDefinitions.*
 import com.gadarts.helicopter.core.assets.TexturesDefinitions
 import com.gadarts.helicopter.core.assets.TexturesDefinitions.*
 import com.gadarts.helicopter.core.components.AmbComponent
@@ -27,14 +29,30 @@ import com.gadarts.helicopter.core.components.ComponentsMapper
 
 class MapSystem : GameEntitySystem() {
 
+    private val ambSounds = listOf(AMB_EAGLE, AMB_WIND, AMB_OUD)
+    private var nextAmbSound: Long = millis() + random(AMB_SND_INTERVAL_MIN, AMB_SND_INTERVAL_MAX)
     private lateinit var floors: Array<Array<Entity?>>
     private lateinit var ambEntities: ImmutableArray<Entity>
     private lateinit var floorModel: Model
+
 
     override fun initialize(am: GameAssetManager) {
         addAmbModels(am)
         addAmbBillboards(am)
         applyTransformOnAmbEntities()
+    }
+
+    override fun resume(delta: Long) {
+        nextAmbSound += delta
+    }
+
+    override fun update(deltaTime: Float) {
+        super.update(deltaTime)
+        val now = millis()
+        if (nextAmbSound < now) {
+            nextAmbSound = now + random(AMB_SND_INTERVAL_MIN, AMB_SND_INTERVAL_MAX)
+            soundPlayer.play(assetsManager.getAssetByDefinition(ambSounds.random()))
+        }
     }
 
     private fun addAmbBillboards(am: GameAssetManager) {
@@ -200,14 +218,14 @@ class MapSystem : GameEntitySystem() {
         am: GameAssetManager,
         modelInstance: ModelInstance
     ) {
-        if (MathUtils.random() > CHANCE_SAND_DEC) {
+        if (random() > CHANCE_SAND_DEC) {
             val sandDecTexture = am.getAssetByDefinition(SAND_DEC)
             val attr = modelInstance.materials.first().get(Diffuse) as TextureAttribute
             val textureRegion = TextureRegion(sandDecTexture)
             attr.set(textureRegion)
             modelInstance.transform.rotate(
                 Vector3.Y,
-                MathUtils.random(4) * 90F
+                random(4) * 90F
             )
         }
     }
@@ -223,7 +241,7 @@ class MapSystem : GameEntitySystem() {
     }
 
     private fun addAmbModels(am: GameAssetManager) {
-        addAmbModelObject(am, Vector3(0F, 0F, 0F), ROCK)
+        addAmbModelObject(am, Vector3(0F, 0F, 0F), FENCE, false)
         addAmbModelObject(am, Vector3(5F, 0F, 0F), BUILDING, false)
         addAmbModelObject(am, Vector3(0F, 0F, 5F), BUILDING, false)
         addAmbModelObject(am, Vector3(5F, 0F, 5F), BUILDING, false)
@@ -232,6 +250,7 @@ class MapSystem : GameEntitySystem() {
         addAmbModelObject(am, Vector3(7F, 0F, 0F), PALM_TREE)
         addAmbModelObject(am, Vector3(8F, 0F, 8F), ROCK)
         addAmbModelObject(am, Vector3(0F, 0F, 8F), ROCK)
+        addAmbModelObject(am, Vector3(9F, 0F, 8F), ROCK)
     }
 
     private fun addAmbModelObject(
@@ -240,11 +259,11 @@ class MapSystem : GameEntitySystem() {
         modelDefinition: ModelsDefinitions,
         rotate: Boolean = true
     ) {
-        val randomScale = MathUtils.random(MIN_SCALE, MAX_SCALE)
+        val randomScale = random(MIN_SCALE, MAX_SCALE)
         val scale = auxVector1.set(randomScale, randomScale, randomScale)
         EntityBuilder.begin()
             .addModelInstanceComponent(am.getAssetByDefinition(modelDefinition), position)
-            .addAmbComponent(scale, if (rotate) MathUtils.random(0F, 360F) else 0F)
+            .addAmbComponent(scale, if (rotate) random(0F, 360F) else 0F)
             .finishAndAddToEngine()
     }
 
@@ -304,5 +323,7 @@ class MapSystem : GameEntitySystem() {
         private const val MAX_SCALE = 1.05F
         private const val CHANCE_SAND_DEC = 0.95F
         private const val EXT_SIZE = 40
+        private const val AMB_SND_INTERVAL_MIN = 7000
+        private const val AMB_SND_INTERVAL_MAX = 22000
     }
 }

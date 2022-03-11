@@ -171,6 +171,10 @@ class RenderSystem : GameEntitySystem(), Disposable, PlayerSystemEventsSubscribe
     override fun initialize(am: GameAssetManager) {
     }
 
+    override fun resume(delta: Long) {
+
+    }
+
     override fun dispose() {
         modelBatch.dispose()
     }

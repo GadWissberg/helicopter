@@ -64,6 +64,9 @@ class CameraSystem : GameEntitySystem() {
         initializeCamera()
     }
 
+    override fun resume(delta: Long) {
+    }
+
     override fun dispose() {
     }
 

@@ -21,6 +21,10 @@ class ProfilingSystem : GameEntitySystem() {
 
     }
 
+    override fun resume(delta: Long) {
+
+    }
+
     override fun dispose() {
         commonData.stage.dispose()
     }

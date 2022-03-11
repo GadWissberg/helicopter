@@ -11,4 +11,5 @@ abstract class GameEntitySystem : Disposable, EntitySystem() {
     lateinit var commonData: CommonData
 
     abstract fun initialize(am: GameAssetManager)
+    abstract fun resume(delta: Long)
 }

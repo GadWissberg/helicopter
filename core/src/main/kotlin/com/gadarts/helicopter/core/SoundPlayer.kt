@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.Entity
 import com.badlogic.gdx.audio.Sound
 import com.badlogic.gdx.graphics.PerspectiveCamera
 import com.badlogic.gdx.math.MathUtils
+import com.gadarts.helicopter.core.assets.SfxDefinitions
 
 class SoundPlayer {
 
@@ -24,8 +25,18 @@ class SoundPlayer {
         return sound.loop(1F, 1F, 0F)
     }
 
+    fun play(sound: Sound): Long {
+        if (!DefaultGameSettings.SFX) return -1
+        return sound.play(
+            MathUtils.random(RANDOM_VOLUME_MIN, 1F),
+            MathUtils.random(PITCH_MIN, PITCH_MAX),
+            0F
+        )
+    }
+
     companion object {
         const val PITCH_MIN = 0.9F
         const val PITCH_MAX = 1.1F
+        const val RANDOM_VOLUME_MIN = 0.6F
     }
 }
