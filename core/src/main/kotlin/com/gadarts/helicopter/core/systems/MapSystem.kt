@@ -245,22 +245,25 @@ class MapSystem : GameEntitySystem() {
         addAmbModelObject(am, Vector3(5F, 0F, 0F), BUILDING, false)
         addAmbModelObject(am, Vector3(0F, 0F, 5F), BUILDING, false)
         addAmbModelObject(am, Vector3(5F, 0F, 5F), BUILDING, false)
-        addAmbModelObject(am, Vector3(7F, 0F, 7F), PALM_TREE)
-        addAmbModelObject(am, Vector3(0F, 0F, 7F), PALM_TREE)
-        addAmbModelObject(am, Vector3(7F, 0F, 0F), PALM_TREE)
-        addAmbModelObject(am, Vector3(8F, 0F, 8F), ROCK)
-        addAmbModelObject(am, Vector3(0F, 0F, 8F), ROCK)
-        addAmbModelObject(am, Vector3(9F, 0F, 8F), ROCK)
+        addAmbModelObject(am, Vector3(7F, 0F, 7F), PALM_TREE, randomScale = true)
+        addAmbModelObject(am, Vector3(0F, 0F, 7F), PALM_TREE, randomScale = true)
+        addAmbModelObject(am, Vector3(7F, 0F, 0F), PALM_TREE, randomScale = true)
+        addAmbModelObject(am, Vector3(8F, 0F, 8F), ROCK, randomScale = true)
+        addAmbModelObject(am, Vector3(0F, 0F, 8F), ROCK, randomScale = true)
+        addAmbModelObject(am, Vector3(9F, 0F, 8F), ROCK, randomScale = true)
+        addAmbModelObject(am, Vector3(10F, 0F, 8F), LIGHT_POLE, false)
+        addAmbModelObject(am, Vector3(11F, 0F, 8F), BARRIER, false)
     }
 
     private fun addAmbModelObject(
         am: GameAssetManager,
         position: Vector3,
         modelDefinition: ModelsDefinitions,
-        rotate: Boolean = true
+        rotate: Boolean = true,
+        randomScale: Boolean = false
     ) {
-        val randomScale = random(MIN_SCALE, MAX_SCALE)
-        val scale = auxVector1.set(randomScale, randomScale, randomScale)
+        val randomScaleValue = if (randomScale) random(MIN_SCALE, MAX_SCALE) else 1F
+        val scale = auxVector1.set(randomScaleValue, randomScaleValue, randomScaleValue)
         EntityBuilder.begin()
             .addModelInstanceComponent(am.getAssetByDefinition(modelDefinition), position)
             .addAmbComponent(scale, if (rotate) random(0F, 360F) else 0F)
