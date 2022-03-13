@@ -120,7 +120,8 @@ class MapSystem : GameEntitySystem() {
             auxVector1.set(x, 0F, z)
         )
         modelInstance.transform.scl(width.toFloat(), 1F, EXT_SIZE.toFloat())
-        val textureAttribute = modelInstance.materials.first().get(TextureAttribute.Diffuse) as TextureAttribute
+        val textureAttribute =
+            modelInstance.materials.first().get(TextureAttribute.Diffuse) as TextureAttribute
         initializeExternalGroundTextureAttribute(textureAttribute, width, depth)
         commonData.modelCache.add(modelInstance)
     }
@@ -212,7 +213,8 @@ class MapSystem : GameEntitySystem() {
         val btm = row < depth - 1 && map.tilesMapping[row + 1][col] != GameMap.TILE_TYPE_EMPTY
         val left = col > 0 && map.tilesMapping[row][col - 1] != GameMap.TILE_TYPE_EMPTY
         val top = row > 0 && map.tilesMapping[row - 1][col] != GameMap.TILE_TYPE_EMPTY
-        val textureAttribute = modelInstance.materials.get(0).get(TextureAttribute.Diffuse) as TextureAttribute
+        val textureAttribute =
+            modelInstance.materials.get(0).get(TextureAttribute.Diffuse) as TextureAttribute
         val roadTile = RoadTiles.getRoadTileByNeighbors(right, btm, left, top)
         if (roadTile != null) {
             textureAttribute.set(TextureRegion(am.getAssetByDefinition(roadTile.textureDefinition)))
@@ -225,7 +227,8 @@ class MapSystem : GameEntitySystem() {
     ) {
         if (MathUtils.random() > CHANCE_SAND_DEC) {
             val sandDecTexture = am.getAssetByDefinition(TexturesDefinitions.SAND_DEC)
-            val attr = modelInstance.materials.first().get(TextureAttribute.Diffuse) as TextureAttribute
+            val attr =
+                modelInstance.materials.first().get(TextureAttribute.Diffuse) as TextureAttribute
             val textureRegion = TextureRegion(sandDecTexture)
             attr.set(textureRegion)
             modelInstance.transform.rotate(
@@ -258,6 +261,10 @@ class MapSystem : GameEntitySystem() {
         addAmbModelObject(am, Vector3(9F, 0F, 8F), ModelsDefinitions.ROCK, randomScale = true)
         addAmbModelObject(am, Vector3(10F, 0F, 8F), ModelsDefinitions.LIGHT_POLE, false)
         addAmbModelObject(am, Vector3(11F, 0F, 8F), ModelsDefinitions.BARRIER, false)
+        addAmbModelObject(am, Vector3(11F, 0F, 11F), ModelsDefinitions.CABIN, false)
+        addAmbModelObject(am, Vector3(11F, 0F, 0F), ModelsDefinitions.CAR, false)
+        addAmbModelObject(am, Vector3(11F, 0F, 2F), ModelsDefinitions.CAR, false)
+        addAmbModelObject(am, Vector3(11F, 0F, 4F), ModelsDefinitions.CAR, false)
     }
 
     private fun addAmbModelObject(

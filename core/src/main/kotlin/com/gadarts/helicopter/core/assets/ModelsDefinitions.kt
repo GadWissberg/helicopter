@@ -15,7 +15,9 @@ enum class ModelsDefinitions(fileNames: Int = 1) : AssetDefinition<Model> {
     BUILDING(3),
     FENCE,
     LIGHT_POLE,
-    BARRIER;
+    BARRIER,
+    CABIN,
+    CAR(2);
 
     private val paths = ArrayList<String>()
     private val pathFormat = "models/%s.g3dj"
