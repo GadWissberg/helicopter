@@ -10,6 +10,7 @@ import com.gadarts.helicopter.core.systems.*
 import com.gadarts.helicopter.core.systems.camera.CameraSystem
 import com.gadarts.helicopter.core.systems.character.CharacterSystem
 import com.gadarts.helicopter.core.systems.hud.HudSystem
+import com.gadarts.helicopter.core.systems.map.MapSystem
 import com.gadarts.helicopter.core.systems.player.PlayerSystem
 import com.gadarts.helicopter.core.systems.profiling.ProfilingSystem
 import com.gadarts.helicopter.core.systems.render.RenderSystem
