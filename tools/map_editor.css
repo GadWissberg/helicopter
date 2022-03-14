@@ -1,0 +1,32 @@
+table {empty-cells: show;table-layout: fixed;width: 100%}
+th,
+td {
+  border: 1px solid black;
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+}
+.fixedElement {
+    background-color: #c0c0c0;
+    position:fixed;
+    top:0;
+    width:98vw;
+    z-index:100;
+     display: flex;
+}
+.label {
+padding: 10px;
+margin:10px;
+}
+.toggleButton{
+background:#298A08;
+margin-top:10px;
+margin-bottom:10px;
+padding: 10px;
+  border: 1px solid black;
+color:white;
+}
+.toggleButton:hover{
+background:#80FF00;
+color:black;
+}
