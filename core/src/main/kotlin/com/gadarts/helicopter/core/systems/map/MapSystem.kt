@@ -265,6 +265,8 @@ class MapSystem : GameEntitySystem() {
         addAmbModelObject(am, Vector3(11F, 0F, 0F), ModelsDefinitions.CAR, false)
         addAmbModelObject(am, Vector3(11F, 0F, 2F), ModelsDefinitions.CAR, false)
         addAmbModelObject(am, Vector3(11F, 0F, 4F), ModelsDefinitions.CAR, false)
+        addAmbModelObject(am, Vector3(11F, 0F, 6F), ModelsDefinitions.CAR, false)
+        addAmbModelObject(am, Vector3(11F, 0F, 8F), ModelsDefinitions.GUARD_HOUSE, false)
     }
 
     private fun addAmbModelObject(
