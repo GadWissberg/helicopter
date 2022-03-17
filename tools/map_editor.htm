@@ -5,9 +5,11 @@
 </head>
 <body>
 <div id="menu" class="fixedElement">
-    <div class="label">Mode:</div>
-    <div class="toggleButton">Tiles</div>
-    <div class="toggleButton" style="margin-left:10px">Objects</div>
+    <div class="label" style="margin-right:0px">Mode:</div>
+    <div class="radioButton" style="padding-left: 0px"><input type="radio" id="option_mode_tiles" name="modes" value="TILES" checked><label
+            for="option_mode_tiles">Tiles</label></div>
+    <div class="radioButton"><input type="radio" id="option_mode_objects" name="modes" value="OBJECTS"><label
+            for="option_mode_objects">Objects</label></div>
 </div>
 <div id="map"></div>
 </body>
