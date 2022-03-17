@@ -1,18 +1,24 @@
 package com.gadarts.helicopter.core.systems.player
 
+import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
+import com.badlogic.ashley.core.Family
+import com.badlogic.ashley.utils.ImmutableArray
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.math.*
+import com.badlogic.gdx.math.collision.BoundingBox
+import com.badlogic.gdx.math.collision.Sphere
 import com.badlogic.gdx.utils.TimeUtils
 import com.gadarts.helicopter.core.GameMap
+import com.gadarts.helicopter.core.components.BoxCollisionComponent
 import com.gadarts.helicopter.core.components.ComponentsMapper
 import com.gadarts.helicopter.core.systems.CommonData.Companion.REGION_SIZE
-import kotlin.math.abs
-import kotlin.math.floor
-import kotlin.math.max
-import kotlin.math.min
+import kotlin.math.*
+
 
 class PlayerMovementHandler {
 
+    private lateinit var collisionEntities: ImmutableArray<Entity>
     private var tiltAnimationHandler = TiltAnimationHandler()
     private var rotToAdd = 0F
     private var desiredDirectionChanged: Boolean = false
@@ -123,9 +129,47 @@ class PlayerMovementHandler {
         handleRotation(deltaTime, player)
         handleAcceleration(player)
         takeStepWithRegionCheck(player, deltaTime, subscribers, currentMap)
+        checkCollisions(player)
         tiltAnimationHandler.update(player)
     }
 
+    private fun checkCollisions(player: Entity) {
+        val radius = ComponentsMapper.sphereCollision.get(player).radius
+        for (entity in collisionEntities) {
+            if (player != entity) {
+                ComponentsMapper.boxCollision.get(entity).getBoundingBox(auxBoundingBox_1)
+                val modelInstanceComponent = ComponentsMapper.modelInstance.get(player)
+                val transform = modelInstanceComponent.modelInstance.transform
+                auxSphere.center.set(transform.getTranslation(auxVector3_1))
+                auxSphere.radius = radius
+                    Gdx.app.log("!", "!${auxBoundingBox_1.centerX},${auxBoundingBox_1.centerY},${auxBoundingBox_1.centerZ}")
+                if (intersectsWith(auxBoundingBox_1,auxSphere)) {
+                }
+            }
+        }
+    }
+    fun intersectsWith(boundingBox: BoundingBox, sphere: Sphere): Boolean {
+        var dmin = 0f
+        val center: Vector3 = sphere.center
+        val bmin = boundingBox.min
+        val bmax = boundingBox.max
+        if (center.x < bmin.x) {
+            dmin += Math.pow((center.x - bmin.x).toDouble(), 2.0).toFloat()
+        } else if (center.x > bmax.x) {
+            dmin += Math.pow((center.x - bmax.x).toDouble(), 2.0).toFloat()
+        }
+        if (center.y < bmin.y) {
+            dmin += Math.pow((center.y - bmin.y).toDouble(), 2.0).toFloat()
+        } else if (center.y > bmax.y) {
+            dmin += Math.pow((center.y - bmax.y).toDouble(), 2.0).toFloat()
+        }
+        if (center.z < bmin.z) {
+            dmin += Math.pow((center.z - bmin.z).toDouble(), 2.0).toFloat()
+        } else if (center.z > bmax.z) {
+            dmin += Math.pow((center.z - bmax.z).toDouble(), 2.0).toFloat()
+        }
+        return dmin <= sphere.radius.pow(2F)
+    }
     private fun takeStepWithRegionCheck(
         player: Entity,
         deltaTime: Float,
@@ -177,7 +221,7 @@ class PlayerMovementHandler {
 
     private fun clampPosition(
         transform: Matrix4,
-        currentMap: GameMap
+        currentMap: GameMap,
     ) {
         val newPos = transform.getTranslation(auxVector3_1)
         newPos.x = MathUtils.clamp(newPos.x, 0F, currentMap.tilesMapping.size.toFloat())
@@ -198,6 +242,11 @@ class PlayerMovementHandler {
         transform.setTranslation(position)
     }
 
+    fun initialize(engine: Engine) {
+        collisionEntities =
+            engine.getEntitiesFor(Family.all(BoxCollisionComponent::class.java).get())
+    }
+
     companion object {
         private const val MAX_ROTATION_STEP = 200F
         private const val ROTATION_INCREASE = 2F
@@ -212,5 +261,7 @@ class PlayerMovementHandler {
         private const val DECELERATION = 0.06F
         private const val IDLE_Z_TILT_DEGREES = 12F
         private const val STRAFE_PRESS_INTERVAL = 500
+        private val auxBoundingBox_1 = BoundingBox()
+        private val auxSphere = Sphere(Vector3(),0F)
     }
 }

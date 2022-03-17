@@ -47,6 +47,7 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
 
     override fun initialize(am: GameAssetManager) {
         playerShootingHandler.initialize(assetsManager)
+        playerMovementHandler.initialize(engine)
     }
 
     override fun resume(delta: Long) {
@@ -170,6 +171,7 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
             .addPlayerComponent()
             .addPrimaryArmComponent(priDecal, priArmProperties, priCalculateRelativePosition)
             .addSecondaryArmComponent(secDecal, secArmProperties, secCalculateRelativePosition)
+            .addSphereCollisionComponent(apacheModel)
             .finishAndAddToEngine()
     }
 

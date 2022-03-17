@@ -9,9 +9,11 @@ import com.badlogic.gdx.graphics.g3d.Model
 import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.graphics.g3d.decals.Decal
 import com.badlogic.gdx.math.Vector3
+import com.badlogic.gdx.math.collision.BoundingBox
 import com.gadarts.helicopter.core.components.*
 import com.gadarts.helicopter.core.components.child.ChildDecalComponent
 import com.gadarts.helicopter.core.components.child.ChildDecal
+import kotlin.math.max
 
 class EntityBuilder private constructor() {
     fun addModelInstanceComponent(
@@ -62,10 +64,6 @@ class EntityBuilder private constructor() {
     }
 
     private fun createDecal(texture: TextureRegion): Decal {
-        Gdx.app.log(
-            "!",
-            "${texture.regionWidth}, ${texture.regionHeight},${texture.regionWidth * DECAL_SCALE}, ${texture.regionHeight * DECAL_SCALE},"
-        )
         return Decal.newDecal(
             texture.regionWidth * DECAL_SCALE,
             texture.regionHeight * DECAL_SCALE,
@@ -157,12 +155,30 @@ class EntityBuilder private constructor() {
         return instance
     }
 
+    fun addSphereCollisionComponent(model: Model): EntityBuilder {
+        val collisionComponent = engine.createComponent(SphereCollisionComponent::class.java)
+        val box = model.calculateBoundingBox(auxBoundingBox)
+        val radius = max(max(box.width / 2F, box.height / 2F), box.depth / 2F)
+        collisionComponent.init(radius)
+        entity!!.add(collisionComponent)
+        return instance
+    }
+
+    fun addBoxCollisionComponent(model: Model): EntityBuilder {
+        val collisionComponent = engine.createComponent(BoxCollisionComponent::class.java)
+        val box = model.calculateBoundingBox(auxBoundingBox)
+        collisionComponent.init(box)
+        entity!!.add(collisionComponent)
+        return instance
+    }
+
     companion object {
 
         private lateinit var instance: EntityBuilder
         var entity: Entity? = null
         lateinit var engine: PooledEngine
         private val auxVector = Vector3()
+        private val auxBoundingBox = BoundingBox()
         private const val DECAL_SCALE = 0.005F
         fun begin(): EntityBuilder {
             entity = engine.createEntity()

@@ -267,6 +267,7 @@ class MapSystem : GameEntitySystem() {
         addAmbModelObject(am, Vector3(11F, 0F, 4F), ModelsDefinitions.CAR, false)
         addAmbModelObject(am, Vector3(11F, 0F, 6F), ModelsDefinitions.CAR, false)
         addAmbModelObject(am, Vector3(11F, 0F, 8F), ModelsDefinitions.GUARD_HOUSE, false)
+        addAmbModelObject(am, Vector3(13F, 0F, 8F), ModelsDefinitions.ANTENNA, false)
     }
 
     private fun addAmbModelObject(
@@ -278,9 +279,11 @@ class MapSystem : GameEntitySystem() {
     ) {
         val randomScaleValue = if (randomScale) MathUtils.random(MIN_SCALE, MAX_SCALE) else 1F
         val scale = auxVector1.set(randomScaleValue, randomScaleValue, randomScaleValue)
+        val model = am.getAssetByDefinition(modelDefinition)
         EntityBuilder.begin()
-            .addModelInstanceComponent(am.getAssetByDefinition(modelDefinition), position)
+            .addModelInstanceComponent(model, position)
             .addAmbComponent(scale, if (rotate) MathUtils.random(0F, 360F) else 0F)
+            .addBoxCollisionComponent(model)
             .finishAndAddToEngine()
     }
 
