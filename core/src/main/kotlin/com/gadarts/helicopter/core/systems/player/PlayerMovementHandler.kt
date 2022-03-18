@@ -4,25 +4,31 @@ import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.utils.ImmutableArray
-import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.graphics.PerspectiveCamera
 import com.badlogic.gdx.math.*
 import com.badlogic.gdx.math.collision.BoundingBox
 import com.badlogic.gdx.math.collision.Sphere
 import com.badlogic.gdx.utils.TimeUtils
 import com.gadarts.helicopter.core.GameMap
+import com.gadarts.helicopter.core.SoundPlayer
+import com.gadarts.helicopter.core.assets.GameAssetManager
+import com.gadarts.helicopter.core.assets.SfxDefinitions
 import com.gadarts.helicopter.core.components.BoxCollisionComponent
 import com.gadarts.helicopter.core.components.ComponentsMapper
+import com.gadarts.helicopter.core.components.ComponentsMapper.player
 import com.gadarts.helicopter.core.systems.CommonData.Companion.REGION_SIZE
 import kotlin.math.*
 
 
-class PlayerMovementHandler {
-
+class PlayerMovementHandler() {
+    private lateinit var assetsManager: GameAssetManager
+    private lateinit var camera: PerspectiveCamera
     private lateinit var collisionEntities: ImmutableArray<Entity>
     private var tiltAnimationHandler = TiltAnimationHandler()
     private var rotToAdd = 0F
     private var desiredDirectionChanged: Boolean = false
     private val desiredVelocity = Vector2()
+    private val prevPos = Vector3()
 
     fun onTouchUp() {
         desiredVelocity.setZero()
@@ -124,68 +130,115 @@ class PlayerMovementHandler {
         player: Entity,
         deltaTime: Float,
         subscribers: HashSet<PlayerSystemEventsSubscriber>,
-        currentMap: GameMap
+        currentMap: GameMap,
+        soundPlayer: SoundPlayer
     ) {
         handleRotation(deltaTime, player)
         handleAcceleration(player)
-        takeStepWithRegionCheck(player, deltaTime, subscribers, currentMap)
-        checkCollisions(player)
+        val transform = ComponentsMapper.modelInstance.get(player).modelInstance.transform
+        transform.getTranslation(prevPos)
+        applyMovementWithRegionCheck(player, deltaTime, subscribers, currentMap)
+        updateBlastVelocity(player)
+        checkCollisions(player, soundPlayer)
         tiltAnimationHandler.update(player)
     }
 
-    private fun checkCollisions(player: Entity) {
+    private fun updateBlastVelocity(player: Entity) {
+        val playerComponent = ComponentsMapper.player.get(player)
+        val blastVelocity = playerComponent.getBlastVelocity(auxVector2_1)
+        if (blastVelocity.len2() > 0F) {
+            blastVelocity.setLength2(max(blastVelocity.len2() - 0.1F, 0F))
+            playerComponent.setBlastVelocity(blastVelocity)
+        }
+    }
+
+    private fun checkCollisions(player: Entity, soundPlayer: SoundPlayer) {
         val radius = ComponentsMapper.sphereCollision.get(player).radius
         for (entity in collisionEntities) {
             if (player != entity) {
-                ComponentsMapper.boxCollision.get(entity).getBoundingBox(auxBoundingBox_1)
-                val modelInstanceComponent = ComponentsMapper.modelInstance.get(player)
-                val transform = modelInstanceComponent.modelInstance.transform
-                auxSphere.center.set(transform.getTranslation(auxVector3_1))
-                auxSphere.radius = radius
-                    Gdx.app.log("!", "!${auxBoundingBox_1.centerX},${auxBoundingBox_1.centerY},${auxBoundingBox_1.centerZ}")
-                if (intersectsWith(auxBoundingBox_1,auxSphere)) {
-                }
+                checkCollision(entity, player, radius, soundPlayer)
             }
         }
     }
-    fun intersectsWith(boundingBox: BoundingBox, sphere: Sphere): Boolean {
+
+    private fun checkCollision(
+        entity: Entity,
+        player: Entity,
+        radius: Float,
+        soundPlayer: SoundPlayer
+    ) {
+        ComponentsMapper.boxCollision.get(entity).getBoundingBox(auxBoundingBox_1)
+        val comp = ComponentsMapper.modelInstance.get(player)
+        val pos = auxSphere.center.set(comp.modelInstance.transform.getTranslation(auxVector3_1))
+        auxSphere.radius = radius
+        if (intersectsWith(auxBoundingBox_1, auxSphere)) {
+            applyCollision(pos, player, soundPlayer)
+        }
+    }
+
+    private fun applyCollision(
+        pos: Vector3,
+        player: Entity,
+        soundPlayer: SoundPlayer
+    ) {
+        val playerComp = ComponentsMapper.player.get(player)
+        val v = playerComp.getCurrentVelocity(auxVector2_2)
+        if (v.len2() > 2F) {
+            soundPlayer.playPositionalSound(
+                assetsManager.getAssetByDefinition(SfxDefinitions.CRASH),
+                true,
+                player,
+                camera
+            )
+        }
+        val dirToPlayer = pos.sub(auxBoundingBox_1.getCenter(auxVector3_2)).nor()
+        val blastVelocity = dirToPlayer.scl(max(v.len2() * 0.4F, 1F))
+        playerComp.setBlastVelocity(auxVector2_1.set(blastVelocity.x, blastVelocity.z))
+        playerComp.setCurrentVelocity(v.scl(0.2F))
+        ComponentsMapper.modelInstance.get(player).modelInstance.transform.setTranslation(prevPos)
+    }
+
+    @Suppress("SameParameterValue")
+    private fun intersectsWith(boundingBox: BoundingBox, sphere: Sphere): Boolean {
         var dmin = 0f
         val center: Vector3 = sphere.center
         val bmin = boundingBox.min
         val bmax = boundingBox.max
         if (center.x < bmin.x) {
-            dmin += Math.pow((center.x - bmin.x).toDouble(), 2.0).toFloat()
+            dmin += (center.x - bmin.x).toDouble().pow(2.0).toFloat()
         } else if (center.x > bmax.x) {
-            dmin += Math.pow((center.x - bmax.x).toDouble(), 2.0).toFloat()
+            dmin += (center.x - bmax.x).toDouble().pow(2.0).toFloat()
         }
         if (center.y < bmin.y) {
-            dmin += Math.pow((center.y - bmin.y).toDouble(), 2.0).toFloat()
+            dmin += (center.y - bmin.y).toDouble().pow(2.0).toFloat()
         } else if (center.y > bmax.y) {
-            dmin += Math.pow((center.y - bmax.y).toDouble(), 2.0).toFloat()
+            dmin += (center.y - bmax.y).toDouble().pow(2.0).toFloat()
         }
         if (center.z < bmin.z) {
-            dmin += Math.pow((center.z - bmin.z).toDouble(), 2.0).toFloat()
+            dmin += (center.z - bmin.z).toDouble().pow(2.0).toFloat()
         } else if (center.z > bmax.z) {
-            dmin += Math.pow((center.z - bmax.z).toDouble(), 2.0).toFloat()
+            dmin += (center.z - bmax.z).toDouble().pow(2.0).toFloat()
         }
         return dmin <= sphere.radius.pow(2F)
     }
-    private fun takeStepWithRegionCheck(
-        player: Entity,
-        deltaTime: Float,
+
+    private fun applyMovementWithRegionCheck(
+        p: Entity,
+        delta: Float,
         subscribers: HashSet<PlayerSystemEventsSubscriber>,
         currentMap: GameMap
     ) {
-        val transform = ComponentsMapper.modelInstance.get(player).modelInstance.transform
+        val transform = ComponentsMapper.modelInstance.get(p).modelInstance.transform
         val currentPosition = transform.getTranslation(auxVector3_2)
         val prevHorizontalIndex = floor(currentPosition.x / REGION_SIZE)
         val prevVerticalIndex = floor(currentPosition.z / REGION_SIZE)
-        takeStep(deltaTime, player, currentMap)
+        applyMovement(delta, p, currentMap, player.get(p).getCurrentVelocity(auxVector2_1))
+        applyMovement(delta, p, currentMap, player.get(p).getBlastVelocity(auxVector2_1))
         val newPosition = transform.getTranslation(auxVector3_2)
         val newHorizontalIndex = floor(newPosition.x / REGION_SIZE)
         val newVerticalIndex = floor(newPosition.z / REGION_SIZE)
         if (prevHorizontalIndex != newHorizontalIndex || prevVerticalIndex != newVerticalIndex) {
-            subscribers.forEach { it.onPlayerEnteredNewRegion(player) }
+            subscribers.forEach { it.onPlayerEnteredNewRegion(p) }
         }
     }
 
@@ -207,11 +260,14 @@ class PlayerMovementHandler {
         playerComponent.strafing = null
     }
 
-    private fun takeStep(deltaTime: Float, player: Entity, currentMap: GameMap) {
-        val playerComponent = ComponentsMapper.player.get(player)
-        if (playerComponent.getCurrentVelocity(auxVector2_1).len2() > 1F) {
-            val currentVelocity = playerComponent.getCurrentVelocity(auxVector2_1)
-            val step = auxVector3_1.set(currentVelocity.x, 0F, -currentVelocity.y)
+    private fun applyMovement(
+        deltaTime: Float,
+        player: Entity,
+        currentMap: GameMap,
+        velocity: Vector2
+    ) {
+        if (velocity.len2() > 1F) {
+            val step = auxVector3_1.set(velocity.x, 0F, -velocity.y)
             step.setLength2(step.len2() - 1F).scl(deltaTime)
             val transform = ComponentsMapper.modelInstance.get(player).modelInstance.transform
             transform.trn(step)
@@ -242,9 +298,11 @@ class PlayerMovementHandler {
         transform.setTranslation(position)
     }
 
-    fun initialize(engine: Engine) {
-        collisionEntities =
-            engine.getEntitiesFor(Family.all(BoxCollisionComponent::class.java).get())
+    fun initialize(engine: Engine, assetsManager: GameAssetManager, camera: PerspectiveCamera) {
+        val family = Family.all(BoxCollisionComponent::class.java).get()
+        collisionEntities = engine.getEntitiesFor(family)
+        this.assetsManager = assetsManager
+        this.camera = camera
     }
 
     companion object {
@@ -252,6 +310,7 @@ class PlayerMovementHandler {
         private const val ROTATION_INCREASE = 2F
         private const val INITIAL_ROTATION_STEP = 6F
         private val auxVector2_1 = Vector2()
+        private val auxVector2_2 = Vector2()
         private val auxVector3_1 = Vector3()
         private val auxVector3_2 = Vector3()
         private val auxQuat = Quaternion()
@@ -262,6 +321,6 @@ class PlayerMovementHandler {
         private const val IDLE_Z_TILT_DEGREES = 12F
         private const val STRAFE_PRESS_INTERVAL = 500
         private val auxBoundingBox_1 = BoundingBox()
-        private val auxSphere = Sphere(Vector3(),0F)
+        private val auxSphere = Sphere(Vector3(), 0F)
     }
 }

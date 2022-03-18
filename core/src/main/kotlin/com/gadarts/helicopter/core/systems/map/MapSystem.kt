@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Vector3
+import com.badlogic.gdx.math.collision.BoundingBox
 import com.badlogic.gdx.utils.TimeUtils
 import com.gadarts.helicopter.core.EntityBuilder
 import com.gadarts.helicopter.core.GameMap
@@ -45,6 +46,18 @@ class MapSystem : GameEntitySystem() {
         addAmbModels(am)
         addAmbBillboards(am)
         applyTransformOnAmbEntities()
+        initializeAmbObjectsBoundingBox()
+    }
+
+    private fun initializeAmbObjectsBoundingBox() {
+        for (entity in ambEntities) {
+            if (ComponentsMapper.modelInstance.has(entity)) {
+                val boxCollisionComponent = ComponentsMapper.boxCollision.get(entity)
+                boxCollisionComponent.getBoundingBox(auxBoundingBox)
+                auxBoundingBox.mul(ComponentsMapper.modelInstance.get(entity).modelInstance.transform)
+                boxCollisionComponent.setBoundingBox(auxBoundingBox)
+            }
+        }
     }
 
     override fun resume(delta: Long) {
@@ -339,6 +352,7 @@ class MapSystem : GameEntitySystem() {
 
     companion object {
         private val auxVector1 = Vector3()
+        private val auxBoundingBox = BoundingBox()
         private const val MIN_SCALE = 0.95F
         private const val MAX_SCALE = 1.05F
         private const val CHANCE_SAND_DEC = 0.95F

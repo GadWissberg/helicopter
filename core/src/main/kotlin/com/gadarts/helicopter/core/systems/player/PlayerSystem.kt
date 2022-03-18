@@ -47,7 +47,7 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
 
     override fun initialize(am: GameAssetManager) {
         playerShootingHandler.initialize(assetsManager)
-        playerMovementHandler.initialize(engine)
+        playerMovementHandler.initialize(engine, assetsManager, commonData.camera)
     }
 
     override fun resume(delta: Long) {
@@ -117,7 +117,8 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
 
     override fun update(deltaTime: Float) {
         super.update(deltaTime)
-        playerMovementHandler.update(player, deltaTime, subscribers, commonData.currentMap)
+        val currentMap = commonData.currentMap
+        playerMovementHandler.update(player, deltaTime, subscribers, currentMap, soundPlayer)
         playerShootingHandler.update(player, subscribers)
     }
 
@@ -213,6 +214,6 @@ class PlayerSystem : GameEntitySystem(), HudSystemEventsSubscriber,
         private const val PRI_BULLET_SPEED = 32F
         private const val SEC_BULLET_SPEED = 8F
         private const val SECONDARY_POSITION_BIAS = 0.3F
-        private const val PLAYER_HEIGHT = 3F
+        private const val PLAYER_HEIGHT = 3.9F
     }
 }

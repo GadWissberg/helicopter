@@ -87,7 +87,7 @@ class CameraSystem : GameEntitySystem() {
     companion object {
         const val NEAR = 0.1F
         const val FAR = 300F
-        const val INITIAL_Y = 6F
+        const val INITIAL_Y = 7F
         const val INITIAL_Z = 5F
         val auxVector2 = Vector2()
         val auxVector3_1 = Vector3()
