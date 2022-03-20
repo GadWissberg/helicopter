@@ -4,13 +4,17 @@ const Modes = Object.freeze({
     TILES: Symbol("tiles"),
     OBJECTS: Symbol("objects")
 });
+const TILE_SAND = "#886A08"
+const TILE_ROAD = "#424242"
 const body = document.body;
 const table = document.getElementById(ID_MAP).appendChild(document.createElement('table'));
 const MODES_GROUP_NAME = "modes"
+const OPTION_MODE_OBJECTS = "option_mode_objects"
+const DIV_ID_LEFT_MENU = "left_menu"
 
 class CellData {
     constructor() {
-        this.tile = null
+        this.tile = "#00FF00"
         this.object = null
     }
 }
@@ -31,24 +35,32 @@ class MapEditor {
         }
         return textNode
     }
-    placeElementInCell(cellData, textNode) {
+    placeElementInCell(cell, cellData, selectedMode, input) {
         if (selectedMode == Modes.TILES) {
-            cellData.tile = "#"
-            textNode = "#"
+            var selectedTile = input == "click" ? TILE_ROAD : TILE_SAND
+            cellData.tile = selectedTile
+            cell.style.backgroundColor = selectedTile
         } else if (selectedMode == Modes.OBJECTS) {
+            var textNode = this.getOrAddChildTextNode(cell)
             cellData.object = "0"
-            // cell.appendChild(document.createTextNode)
+            textNode = "0"
         }
     }
-    onCellClicked(row, col) {
+
+    onCellLeftClicked(row, col) {
         var cell = table.rows[row].cells[col]
-        if (cell.cellData == null) {
-            cell.cellData = new CellData()
-        }
+        initializeCellData(cell);
+        var selectedMode = Modes[document.querySelector('input[name="' + MODES_GROUP_NAME + '"]:checked').value]
         var cellData = cell.cellData;
-        selectedMode = Modes[document.querySelector('input[name="' + MODES_GROUP_NAME + '"]:checked').value]
-        textNode = this.getOrAddChildTextNode(cell)
-        this.placeElementInCell(cellData, textNode)
+        this.placeElementInCell(cell, cellData, selectedMode, "click")
+    }
+
+    onCellRightClicked(row, col) {
+        var cell = table.rows[row].cells[col]
+        initializeCellData(cell);
+        var cellData = cell.cellData;
+        var selectedMode = Modes[document.querySelector('input[name="' + MODES_GROUP_NAME + '"]:checked').value]
+        this.placeElementInCell(cell, cellData, selectedMode, "contextmenu")
     }
 
     getOrAddChildTextNode(cell) {
@@ -66,24 +78,35 @@ class MapEditor {
             for (let j = 0; j < DEFAULT_SIZE; j++) {
                 const td = tr.insertCell();
                 td.addEventListener('click', e => {
-                    this.onCellClicked(i, j)
+                    this.onCellLeftClicked(i, j)
                 })
+                td.addEventListener('contextmenu', e => {
+                    e.preventDefault()
+                    this.onCellRightClicked(i, j)
+                    return false;
+                }, false)
             }
         }
         this.initializeModesRadioButtons();
     }
 
     initializeModesRadioButtons() {
-        var rad = document.myForm.myRadios;
-        var prev = null;
-        for (var i = 0; i < rad.length; i++) {
-            rad[i].addEventListener('change', function () {
-                (prev) ? console.log(prev.value) : null;
-                if (this !== prev) {
-                    prev = this;
-                }
-                console.log(this.value);
-            });
+        const leftMenuDiv = document.getElementById(DIV_ID_LEFT_MENU).style;
+        function onRadioButtonChecked(event) {
+            if (event.target.id == OPTION_MODE_OBJECTS) {
+                leftMenuDiv.visibility = 'visible'
+            } else {
+                leftMenuDiv.visibility = 'hidden'
+            }
         }
+        document.querySelectorAll("input[name='" + MODES_GROUP_NAME + "']").forEach((input) => {
+            input.addEventListener('change', onRadioButtonChecked);
+        });
+    }
+}
+
+function initializeCellData(cell) {
+    if (cell.cellData == null) {
+        cell.cellData = new CellData();
     }
 }

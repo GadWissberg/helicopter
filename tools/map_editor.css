@@ -12,11 +12,13 @@ td {
   overflow: hidden;
 }
 
+tr {
+  background-color: #886A08;
+}
+
 .fixedElement {
   background-color: #c0c0c0;
   position: fixed;
-  top: 0;
-  width: 98vw;
   z-index: 100;
   display: flex;
 }
@@ -36,4 +38,15 @@ td {
 #map {
   margin: 40px;
   padding: 40px;
+}
+
+#menu {
+  top: 0;
+  width: 98vw;
+}
+
+#left_menu {
+  top: 3vw;
+  width: 100px;
+  visibility: hidden;
 }
