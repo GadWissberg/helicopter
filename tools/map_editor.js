@@ -10,7 +10,7 @@ const body = document.body;
 const table = document.getElementById(ID_MAP).appendChild(document.createElement('table'));
 const MODES_GROUP_NAME = "modes"
 const OPTION_MODE_OBJECTS = "option_mode_objects"
-const DIV_ID_LEFT_MENU = "left_menu"
+const DIV_ID_LEFT_MENU = "left_menu_div"
 
 class CellData {
     constructor() {
@@ -92,6 +92,7 @@ class MapEditor {
 
     initializeModesRadioButtons() {
         const leftMenuDiv = document.getElementById(DIV_ID_LEFT_MENU).style;
+
         function onRadioButtonChecked(event) {
             if (event.target.id == OPTION_MODE_OBJECTS) {
                 leftMenuDiv.visibility = 'visible'

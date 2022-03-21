@@ -9,13 +9,14 @@
 <body>
     <div id="menu" class="fixedElement">
         <div class="label" style="margin-right:0px">Mode:</div>
-        <div class="radioButton" style="padding-left: 0px"><input type="radio" id="option_mode_tiles" name="modes"
-                value="TILES" checked><label for="option_mode_tiles">Tiles</label></div>
-        <div class="radioButton"><input type="radio" id="option_mode_objects" name="modes" value="OBJECTS"><label
-                for="option_mode_objects">Objects</label></div>
+        <div class="radioButton" style="padding-left: 0px"><input type="radio" id="option_mode_tiles" name="modes" value="TILES" checked><label for="option_mode_tiles">Tiles</label></div>
+        <div class="radioButton"><input type="radio" id="option_mode_objects" name="modes" value="OBJECTS"><label for="option_mode_objects">Objects</label></div>
     </div>
     <div id="map"></div>
-    <div id="left_menu" class="fixedElement">TEST</div>
+    <div id="left_menu_div" class="fixedElement" style="display: table-cell;">
+        <div class="game_object_selection"><input type="radio" class="game_object_radio" name="game_object_selections" value="PLAYER" checked>Player</div>
+        <div class="game_object_selection"><input type="radio" class="game_object_radio" name="game_object_selections" value="PALM_TREE">Palm Tree</div>
+    </div>
 </body>
 
 </html>
