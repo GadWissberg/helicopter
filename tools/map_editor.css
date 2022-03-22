@@ -1,55 +1,83 @@
 table {
-    empty-cells: show;
-    table-layout: fixed;
-    width: 100%
+  empty-cells: show;
+  table-layout: fixed;
+  width: 100%;
+  table-layout:fixed;
 }
 
 th,
 td {
-    border: 1px solid black;
-    width: 64px;
-    height: 64px;
-    overflow: hidden;
+  border: 1px solid black;
+  width: 64px;
+  height: 64px;
 }
 
 tr {
-    background-color: #886A08;
+  background-color: #886A08;
 }
 
 .fixedElement {
-    background-color: #c0c0c0;
-    position: fixed;
-    z-index: 100;
-    display: flex;
+  background-color: #c0c0c0;
+  position: fixed;
+  z-index: 100;
+  display: flex;
 }
 
 .label {
-    padding: 10px;
-    margin: 10px;
+  padding: 10px;
+  margin: 10px;
 }
 
 .radioButton {
-    padding: 10px;
-    margin-top: 10px;
-    margin-bottom: 10px;
+  padding: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 #map {
-    margin: 40px;
-    padding: 40px;
+  margin: 40px;
+  padding: 40px;
 }
 
 #menu {
-    top: 0;
-    width: 98vw;
+  top: 0;
+  width: 98vw;
 }
 
 #left_menu_div {
-    top: 3vw;
-    width: 200px;
-    visibility: hidden;
+  top: 3vw;
+  width: 200px;
+  visibility: hidden;
 }
 
 .game_object_selection {
-    padding: 10px;
+  padding: 10px;
+}
+
+.menu_button {
+  padding: 10px;
+  margin: 10px;
+  background-color: beige;
+  border-radius: 10px;
+  -webkit-touch-callout: none;
+  /* iOS Safari */
+  -webkit-user-select: none;
+  /* Safari */
+  -khtml-user-select: none;
+  /* Konqueror HTML */
+  -moz-user-select: none;
+  /* Old versions of Firefox */
+  -ms-user-select: none;
+  /* Internet Explorer/Edge */
+  user-select: none;
+}
+
+.menu_button:hover {
+  background-color: white;
+  cursor: pointer;
+}
+
+.menu_button:active {
+  background-color: bisque;
+  cursor: pointer;
 }
