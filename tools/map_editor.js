@@ -1,3 +1,10 @@
+class CellData {
+    constructor() {
+        this.tile = "#00FF00"
+        this.object = null
+    }
+}
+
 const DEFAULT_SIZE = 48
 const ID_MAP = "map"
 const Modes = Object.freeze({
@@ -27,14 +34,9 @@ const DIV_ID_LEFT_MENU = "left_menu_div"
 const CLASS_NAME_GAME_OBJECT_SELECTION = "game_object_selection";
 const CLASS_NAME_GAME_OBJECT_RADIO = "game_object_radio";
 const RADIO_GROUP_NAME_GAME_OBJECT_SELECTIONS = "game_object_selections";
-
-class CellData {
-    constructor() {
-        this.tile = "#00FF00"
-        this.object = null
-    }
-}
-
+const DIV_ID_BUTTON_SAVE = "button_save";
+const DIV_ID_BUTTON_LOAD = "button_load";
+const OUTPUT_FILE_NAME = 'map.json';
 class MapEditor {
 
     constructor() {
@@ -42,6 +44,70 @@ class MapEditor {
         this.inflateElementsLeftMenu();
         table.style.width = DEFAULT_SIZE * 64 + 'px';
         table.style.height = DEFAULT_SIZE * 64 + 'px';
+        document.getElementById(DIV_ID_BUTTON_SAVE).addEventListener('click', e => {
+            var output = {};
+            var tilesString = calculateTilesMapString();
+            output.tiles = tilesString;
+            var elementsArray = calculateElementsArray();
+            output.elements = elementsArray;
+            var json = JSON.stringify(output);
+            saveJsonToFile(json);
+
+            function calculateElementsArray() {
+                var elementsArray = [];
+                for (var row in table.rows) {
+                    for (var col in table.rows[row].cells) {
+                        if (table.rows[row].cells[col].cellData != null) {
+                            if (table.rows[row].cells[col].cellData.object != null) {
+                                deflateElementObject(elementsArray, row, col);
+                            }
+                        }
+                    }
+                }
+                return elementsArray;
+
+                function deflateElementObject(elementsArray, row, col) {
+                    var elementObject = {};
+                    elementObject.definition = table.rows[row].cells[col].cellData.object;
+                    elementObject.row = parseInt(row);
+                    elementObject.col = parseInt(col);
+                    elementsArray.push(elementObject);
+                }
+            }
+
+            function calculateTilesMapString() {
+                var tilesString = "";
+                for (var row in table.rows) {
+                    for (var cell in table.rows[row].cells) {
+                        var currentTile = TILE_SAND;
+                        if (table.rows[row].cells[cell].cellData != null) {
+                            currentTile = table.rows[row].cells[cell].cellData.tile;
+                        }
+                        tilesString += (currentTile == TILE_ROAD ? '1' : '0');
+                    }
+                }
+                return tilesString;
+            }
+
+            function saveJsonToFile(json) {
+                var bb = new Blob([json], { type: 'text/json' });
+                var a = document.createElement('a');
+                a.download = OUTPUT_FILE_NAME;
+                a.href = window.URL.createObjectURL(bb);
+                a.click();
+            }
+
+
+        });
+
+
+        document.getElementById(DIV_ID_BUTTON_LOAD).addEventListener('click', e => {
+
+            var input = document.createElement('input');
+            input.type = 'file';
+            input.click();
+        });
+
     }
 
     inflateElementsLeftMenu() {
@@ -158,6 +224,7 @@ class MapEditor {
 
     initializeModesRadioButtons() {
         const leftMenuDiv = document.getElementById(DIV_ID_LEFT_MENU).style;
+
         function onRadioButtonChecked(event) {
             if (event.target.id == OPTION_MODE_OBJECTS) {
                 leftMenuDiv.visibility = 'visible'
