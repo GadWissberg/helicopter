@@ -23,6 +23,7 @@ const ElementsDefinitions = Object.freeze([
     "GUARD_HOUSE",
     "ANTENNA",
 ]);
+const Directions = Object.freeze({ east: 0, north: 90, west: 180, south: 270 });
 const MAP_SIZES = Object.freeze({ small: 48, medium: 96, large: 192 });
 const TILE_SAND = Object.freeze({ tile: "#886A08", symbol: "0" })
 const TILE_ROAD = Object.freeze({ tile: "#424242", symbol: "1" });
@@ -38,6 +39,9 @@ const DIV_ID_BUTTON_SAVE = "button_save";
 const DIV_ID_BUTTON_LOAD = "button_load";
 const OUTPUT_FILE_NAME = 'map.json';
 const SELECT_ID_DROPDOWN_MAP_SIZES = "dropdown_map_sizes";
+const DIV_ID_DIRECTION = "direction";
+const DIV_ID_CELL_CONTENTS = "cell_contents";
+const CLASS_NAME_CELL_CONTENTS = "cellContents";
 class MapEditor {
 
     constructor() {
@@ -194,10 +198,11 @@ class MapEditor {
         });
     }
 
-    findChildTextNode(cell) {
+    findChildTextNode(cellContents) {
+        if (cellContents == null) return;
         var textNode = null
-        for (var i = 0; i < cell.childNodes.length; i++) {
-            var curNode = cell.childNodes[i];
+        for (var i = 0; i < cellContents.childNodes.length; i++) {
+            var curNode = cellContents.childNodes[i];
             if (curNode.nodeName === "#text") {
                 textNode = curNode;
                 break;
@@ -243,16 +248,30 @@ class MapEditor {
         if (cell.cellData == null) {
             cell.cellData = new CellData();
         }
-        cell.cellData.object = selection;
+        cell.cellData.object = { definition: selection, direction: Directions.east };
         textNode.nodeValue = selection;
+        var directionDiv = document.getElementById(DIV_ID_DIRECTION + "_" + cell.closest('tr').rowIndex + "_" + cell.cellIndex);
+        if (directionDiv == null) {
+            createArrowImage();
+        }
+        // directionDiv
+
+        function createArrowImage() {
+            directionDiv = document.createElement('div');
+            directionDiv.id = DIV_ID_DIRECTION + "_" + cell.closest('tr').rowIndex + "_" + cell.cellIndex;
+            var imageElement = document.createElement('img');
+            imageElement.src = "arrow.png";
+            directionDiv.appendChild(imageElement);
+            document.getElementById(DIV_ID_CELL_CONTENTS + "_" + cell.closest('tr').rowIndex + "_" + cell.cellIndex).appendChild(directionDiv);
+        }
     }
 
     onCellLeftClicked(row, col) {
-        var cell = table.rows[row].cells[col]
+        var cell = table.rows[row].cells[col];
         initializeCellData(cell);
-        var selectedMode = Modes[document.querySelector('input[name="' + RADIO_GROUP_NAME_MODES + '"]:checked').value]
+        var selectedMode = Modes[document.querySelector('input[name="' + RADIO_GROUP_NAME_MODES + '"]:checked').value];
         var cellData = cell.cellData;
-        this.placeElementInCell(cell, cellData, selectedMode, "click")
+        this.placeElementInCell(cell, cellData, selectedMode, "click");
     }
 
     onCellRightClicked(row, col) {
@@ -264,12 +283,21 @@ class MapEditor {
     }
 
     getOrAddChildTextNode(cell) {
-        var textNode = this.findChildTextNode(cell);
+        var cellContentsId = DIV_ID_CELL_CONTENTS + "_" + cell.closest('tr').rowIndex + "_" + cell.cellIndex;
+        var textNode = this.findChildTextNode(document.getElementById(cellContentsId));
         if (textNode == null) {
-            textNode = document.createTextNode("#");
-            cell.appendChild(textNode);
+            createCellContents();
         }
         return textNode
+
+        function createCellContents() {
+            var cellContents = document.createElement('div');
+            cell.appendChild(cellContents);
+            cellContents.id = cellContentsId;
+            textNode = document.createTextNode("!");
+            cellContents.appendChild(textNode);
+            cellContents.className = CLASS_NAME_CELL_CONTENTS;
+        }
     }
 
     resetMap(map_size = MAP_SIZES.small) {
