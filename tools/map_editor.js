@@ -86,7 +86,7 @@ class MapEditor {
                         inflateTiles();
                         for (var i = 0; i < inputMapObject.elements.length; i++) {
                             var element = inputMapObject.elements[i];
-                            self.placeElementObject(table.rows[element.row].cells[element.col], element.definition);
+                            self.placeElementObject(table.rows[element.row].cells[element.col], element.definition, element.direction);
                         }
 
                         function inflateTiles() {
@@ -131,7 +131,9 @@ class MapEditor {
 
                     function deflateElementObject(elementsArray, row, col) {
                         var elementObject = {};
-                        elementObject.definition = table.rows[row].cells[col].cellData.object;
+                        var object = table.rows[row].cells[col].cellData.object;
+                        elementObject.definition = object.definition;
+                        elementObject.direction = object.direction;
                         elementObject.row = parseInt(row);
                         elementObject.col = parseInt(col);
                         elementsArray.push(elementObject);
@@ -240,21 +242,36 @@ class MapEditor {
             var textNode = editor.getOrAddChildTextNode(cell);
             cellData.object = null;
             textNode.nodeValue = null;
+            var directionDiv = document.getElementById(DIV_ID_DIRECTION + "_" + cell.closest('tr').rowIndex + "_" + cell.cellIndex);
+            if (directionDiv != null) {
+                directionDiv.removeChild(directionDiv.getElementsByTagName('img')[0]);
+            }
         }
     }
 
-    placeElementObject(cell, selection) {
-        var textNode = this.getOrAddChildTextNode(cell);
-        if (cell.cellData == null) {
-            cell.cellData = new CellData();
+    placeElementObject(cell, selection, direction = Directions.east) {
+        initializeCellData();
+        if (cell.cellData.object != null) {
+            direction = (cell.cellData.object.direction + 90) % 360;
         }
-        cell.cellData.object = { definition: selection, direction: Directions.east };
-        textNode.nodeValue = selection;
-        var directionDiv = document.getElementById(DIV_ID_DIRECTION + "_" + cell.closest('tr').rowIndex + "_" + cell.cellIndex);
-        if (directionDiv == null) {
-            createArrowImage();
+        cell.cellData.object = { definition: selection, direction: direction };
+        this.getOrAddChildTextNode(cell).nodeValue = selection;
+        var directionDiv = updateDirection();
+
+        function updateDirection() {
+            var directionDiv = document.getElementById(DIV_ID_DIRECTION + "_" + cell.closest('tr').rowIndex + "_" + cell.cellIndex);
+            if (directionDiv == null) {
+                directionDiv = createArrowImage();
+            }
+            directionDiv.getElementsByTagName('img')[0].style.transform = "translate(-50%, -50%) rotate(" + (-1 * direction) + "deg) ";
+            return directionDiv;
         }
-        // directionDiv
+
+        function initializeCellData() {
+            if (cell.cellData == null) {
+                cell.cellData = new CellData();
+            }
+        }
 
         function createArrowImage() {
             directionDiv = document.createElement('div');
@@ -262,7 +279,7 @@ class MapEditor {
             var imageElement = document.createElement('img');
             imageElement.src = "arrow.png";
             directionDiv.appendChild(imageElement);
-            document.getElementById(DIV_ID_CELL_CONTENTS + "_" + cell.closest('tr').rowIndex + "_" + cell.cellIndex).appendChild(directionDiv);
+            return document.getElementById(DIV_ID_CELL_CONTENTS + "_" + cell.closest('tr').rowIndex + "_" + cell.cellIndex).appendChild(directionDiv);
         }
     }
 
@@ -278,8 +295,8 @@ class MapEditor {
         var cell = table.rows[row].cells[col]
         initializeCellData(cell);
         var cellData = cell.cellData;
-        var selectedMode = Modes[document.querySelector('input[name="' + RADIO_GROUP_NAME_MODES + '"]:checked').value]
-        this.placeElementInCell(cell, cellData, selectedMode, "contextmenu")
+        var selectedMode = Modes[document.querySelector('input[name="' + RADIO_GROUP_NAME_MODES + '"]:checked').value];
+        this.placeElementInCell(cell, cellData, selectedMode, "contextmenu");
     }
 
     getOrAddChildTextNode(cell) {
