@@ -1,8 +1,9 @@
 package com.gadarts.helicopter.core
 
-class GameMap(val tilesMapping: Array<CharArray>) {
+import com.gadarts.helicopter.core.systems.map.PlacedElement
+
+class GameMap(val tilesMapping: Array<CharArray>, val placedElements: List<PlacedElement>) {
     companion object {
         const val TILE_TYPE_EMPTY = '0'
-        const val TILE_TYPE_ROAD = '#'
     }
 }

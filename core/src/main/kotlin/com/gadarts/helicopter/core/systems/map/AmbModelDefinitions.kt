@@ -2,7 +2,7 @@ package com.gadarts.helicopter.core.systems.map
 
 import com.gadarts.helicopter.core.assets.ModelsDefinitions
 
-enum class AmbDefinitions(
+enum class AmbModelDefinitions(
     private val modelDefinition: ModelsDefinitions,
     private val randomizeScale: Boolean = false,
     private val randomizeRotation: Boolean = false,
