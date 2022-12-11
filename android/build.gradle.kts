@@ -17,7 +17,7 @@ android {
         val appVersion: String by project
         applicationId = "com.gadarts.helicopter"
         minSdk = 22
-        targetSdk = 30
+        targetSdk = 32
         versionCode = appVersion.split('.').joinToString("") { it.padStart(2, '0') }.toInt()
         versionName = appVersion
     }
@@ -34,6 +34,7 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+    namespace = "com.gadarts.helicopter"
 }
 
 
